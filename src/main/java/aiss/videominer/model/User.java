@@ -30,6 +30,14 @@ public class User {
     @JsonProperty("picture_link")
     private String picture_link;
 
+    public User() {}
+
+    public User(String name, String userLink, String pictureLink) {
+        this.name = name;
+        this.user_link = userLink;
+        this.picture_link = pictureLink;
+    }
+
     public Long getId() {
         return id;
     }

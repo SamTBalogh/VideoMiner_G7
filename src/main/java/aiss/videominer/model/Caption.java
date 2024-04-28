@@ -22,6 +22,13 @@ public class Caption {
     @JsonProperty("language")
     private String language;
 
+    public Caption(String id, String language, String name) {
+        this.id = id;
+        this.language = language;
+        this.name = name;
+    }
+
+    public Caption() {}
 
     public String getId() {
         return id;

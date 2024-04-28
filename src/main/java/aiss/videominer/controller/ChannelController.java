@@ -1,23 +1,84 @@
 package aiss.videominer.controller;
 
 
-import aiss.videominer.model.Channel;
-import aiss.videominer.repository.ChannelRepository;
+import aiss.videominer.model.*;
+import aiss.videominer.repository.*;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/channels")
+@RequestMapping("/videominer/channels")
 public class ChannelController {
 
     @Autowired
-    ChannelRepository repository;
+    ChannelRepository channelRepository;
 
-    // GET http://localhost:8080/api/channels
+    @Autowired
+    VideoRepository videoRepository;
+
+    @Autowired
+    CaptionRepository captionRepository;
+
+    @Autowired
+    CommentRepository commentRepository;
+    @Autowired
+    private UserRepository userRepository;
+
+    // GET http://localhost:8080/videominer/channels
     @GetMapping
-    public List<Channel> findAll() { return repository.findAll();}
+    public List<Channel> findAll() { return channelRepository.findAll();}
+
+    // GET http://localhost:8080/videominer/channels/{id}
+    @GetMapping("/{id}")
+    public Channel findById(@PathVariable String id) {
+        Optional<Channel> channel = channelRepository.findById(id);
+        return channel.get();
+    }
+
+    //POST http://localhost:8080/videominer/channels
+    @PostMapping
+    public Channel create(@Valid @RequestBody Channel channel) {
+        Channel _channel = channelRepository.save(new Channel(channel.getId(), channel.getName(),
+                channel.getDescription(), channel.getCreatedTime()));
+            for(Video v: channel.getVideos()){
+                Video video = videoRepository.save(new Video(v.getId(), v.getName(),
+                        v.getDescription(), v.getReleaseTime()));
+                _channel.getVideos().add(video);
+                for(Caption cap: v.getCaptions()){
+                    Caption caption = captionRepository.save(new Caption(cap.getId(), cap.getName(), cap.getLanguage()));
+                    video.getCaptions().add(caption);
+                }
+                for(Comment com: v.getComments()){
+                    Comment comment = commentRepository.save(new Comment(com.getId(), com.getText(), com.getCreatedOn(), com.getAuthor()));
+                    video.getComments().add(comment);
+                    User u = comment.getAuthor();
+                    userRepository.save(new User(u.getName(), u.getUser_link(), u.getPicture_link()));
+                }
+        }
+        return _channel;
+    }
+
+    // PUT http://localhost:8080/videominer/channels/{id}
+    @PutMapping("/{id}")
+    public void update(@Valid @RequestBody Channel updatedChannel, @PathVariable String id) {
+        Optional<Channel> channelData = channelRepository.findById(id);
+        Channel _channel = channelData.get();
+        _channel.setName(updatedChannel.getName());
+        _channel.setDescription(updatedChannel.getDescription());
+        channelRepository.save(_channel);
+    }
+
+    // DELETE http://localhost:8080/videominer/channels/{id}
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable String id) {
+        if(channelRepository.existsById(id)) {
+            channelRepository.deleteById(id);
+        }
+    }
 }

@@ -27,6 +27,15 @@ public class Comment {
     @NotNull(message = "Comment author cannot be null")
     private User author;
 
+    public Comment() {}
+
+    public Comment(String id, String text ,String createdOn, User author) {
+        this.id = id;
+        this.text = text;
+        this.createdOn = createdOn;
+        this.author = author;
+    }
+
     public String getId() {
         return id;
     }
