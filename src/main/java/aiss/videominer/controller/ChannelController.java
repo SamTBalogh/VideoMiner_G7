@@ -41,23 +41,18 @@ public class ChannelController {
     }
 
     //POST http://localhost:8080/videominer/channels
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public Channel create(@Valid @RequestBody Channel channel) {
-        Channel _channel = channelRepository.save(new Channel(channel.getId(), channel.getName(),
-                channel.getDescription(), channel.getCreatedTime()));
+        Channel _channel = channelRepository.save(channel);
             for(Video v: channel.getVideos()){
-                Video video = videoRepository.save(new Video(v.getId(), v.getName(),
-                        v.getDescription(), v.getReleaseTime()));
+                Video video = videoRepository.save(v);
                 _channel.getVideos().add(video);
-                for(Caption cap: v.getCaptions()){
-                    Caption caption = captionRepository.save(new Caption(cap.getId(), cap.getName(), cap.getLanguage()));
-                    video.getCaptions().add(caption);
-                }
+                captionRepository.saveAll(v.getCaptions());
                 for(Comment com: v.getComments()){
-                    Comment comment = commentRepository.save(new Comment(com.getId(), com.getText(), com.getCreatedOn(), com.getAuthor()));
-                    video.getComments().add(comment);
-                    User u = comment.getAuthor();
-                    userRepository.save(new User(u.getName(), u.getUser_link(), u.getPicture_link()));
+                    Comment comment = commentRepository.save(com);
+                    video.getComments().add(commentRepository.save(com));
+                    userRepository.save(comment.getAuthor());
                 }
         }
         return _channel;

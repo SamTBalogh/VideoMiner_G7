@@ -1,6 +1,5 @@
 package aiss.videominer.controller;
 
-import aiss.videominer.model.Caption;
 import aiss.videominer.model.User;
 import aiss.videominer.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -27,13 +26,6 @@ public class UserController {
     public User findById(@PathVariable String id) {
         Optional<User> user = repository.findById(id);
         return user.get();
-    }
-
-    //POST http://localhost:8080/videominer/users
-    @PostMapping
-    public User create(@Valid @RequestBody User user) {
-        User _user = repository.save(new User(user.getName(), user.getUser_link(), user.getPicture_link()));
-        return _user;
     }
 
     // PUT http://localhost:8080/videominer/users/{id}
