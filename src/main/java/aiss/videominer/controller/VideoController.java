@@ -1,20 +1,23 @@
 package aiss.videominer.controller;
 
-
-import aiss.videominer.model.Caption;
+import aiss.videominer.exception.VideoNotFoundException;
+import aiss.videominer.exception.ChannelNotFoundException;
+import aiss.videominer.model.Channel;
+import aiss.videominer.model.Comment;
 import aiss.videominer.model.Video;
-import aiss.videominer.repository.ChannelRepository;
-import aiss.videominer.repository.VideoRepository;
+import aiss.videominer.repository.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/videominer/videos")
+@RequestMapping("/videominer")
 public class VideoController {
 
     @Autowired
@@ -23,29 +26,65 @@ public class VideoController {
     @Autowired
     VideoRepository videoRepository;
 
+    @Autowired
+    CaptionRepository captionRepository;
+
+    @Autowired
+    CommentRepository commentRepository;
+    @Autowired
+    private UserRepository userRepository;
+
     // GET http://localhost:8080/videominer/videos
-    @GetMapping
+    @GetMapping("/videos")
     public List<Video> findAll() { return videoRepository.findAll();}
 
     // GET http://localhost:8080/videominer/videos/{id}
-    @GetMapping("/{id}")
-    public Video findById(@PathVariable String id) {
+    @GetMapping("/videos/{id}")
+    public Video findById(@PathVariable String id) throws VideoNotFoundException {
         Optional<Video> video = videoRepository.findById(id);
+        if(!video.isPresent()){
+            throw new VideoNotFoundException();
+        }
         return video.get();
     }
 
-    //POST http://localhost:8080/videominer/channels/{channelId}/videos
+    // GET http://localhost:8080/videominer/channels/{channelId}/videos
+    @GetMapping("/channels/{channelId}/videos")
+    public List<Video> getAllVideosByChannel(@PathVariable("channelId") String channelId) throws ChannelNotFoundException {
+
+        Optional<Channel> channel = channelRepository.findById(channelId);
+        if (!channel.isPresent()) {
+            throw new ChannelNotFoundException();
+        }
+        return new ArrayList<>(channel.get().getVideos());
+    }
+
+    // POST http://localhost:8080/videominer/channels/{channelId}/videos
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping
-    public Video create(@PathVariable("channelId") String channelId, @Valid @RequestBody Video video) {
-        Video _video = videoRepository.save(new Video(video.getId(), video.getName(), video.getDescription(), video.getReleaseTime()));
-        return _video;
+    @PostMapping("/channels/{channelId}/videos")
+    public Video create(@PathVariable("channelId") String channelId, @Valid @RequestBody Video videoRequest) throws ChannelNotFoundException {
+
+        Optional<Channel> channel = channelRepository.findById(channelId);
+        if (!channel.isPresent()) {
+            throw new ChannelNotFoundException();
+        }
+        channel.get().getVideos().add(videoRequest);
+        for (Comment comment : videoRequest.getComments()) {
+            userRepository.save(comment.getAuthor());
+            commentRepository.save(comment);
+        }
+        captionRepository.saveAll(videoRequest.getCaptions());
+
+        return videoRepository.save(videoRequest);
     }
 
     // PUT http://localhost:8080/videominer/videos/{id}
-    @PutMapping("/{id}")
-    public void update(@Valid @RequestBody Video updatedVideo, @PathVariable String id) {
+    @PutMapping("/videos/{id}")
+    public void update(@Valid @RequestBody Video updatedVideo, @PathVariable String id) throws VideoNotFoundException {
         Optional<Video> videoData = videoRepository.findById(id);
+        if (!videoData.isPresent()) {
+            throw new VideoNotFoundException();
+        }
         Video _video = videoData.get();
         _video.setId(updatedVideo.getId());
         _video.setName(updatedVideo.getName());
@@ -56,7 +95,7 @@ public class VideoController {
 
     // DELETE http://localhost:8080/videominer/videos/{id}
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/videos/{id}")
     public void delete(@PathVariable String id) {
         if(videoRepository.existsById(id)) {
             videoRepository.deleteById(id);

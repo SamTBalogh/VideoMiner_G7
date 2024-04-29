@@ -3,6 +3,7 @@ package aiss.videominer.controller;
 
 import aiss.videominer.model.*;
 import aiss.videominer.repository.*;
+import aiss.videominer.exception.ChannelNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,8 +27,9 @@ public class ChannelController {
 
     @Autowired
     CommentRepository commentRepository;
+
     @Autowired
-    private UserRepository userRepository;
+    UserRepository userRepository;
 
     // GET http://localhost:8080/videominer/channels
     @GetMapping
@@ -35,29 +37,27 @@ public class ChannelController {
 
     // GET http://localhost:8080/videominer/channels/{id}
     @GetMapping("/{id}")
-    public Channel findById(@PathVariable String id) {
+    public Channel findById(@PathVariable String id) throws ChannelNotFoundException {
         Optional<Channel> channel = channelRepository.findById(id);
+        if (!channel.isPresent()) {
+            throw new ChannelNotFoundException();
+        }
         return channel.get();
     }
 
     //POST http://localhost:8080/videominer/channels
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public Channel create(@Valid @RequestBody Channel channel) {
-        Channel _channel = channelRepository.save(new Channel(channel.getId(), channel.getName(),
-                channel.getDescription(), channel.getCreatedTime()));
+        Channel _channel = channelRepository.save(channel);
             for(Video v: channel.getVideos()){
-                Video video = videoRepository.save(new Video(v.getId(), v.getName(),
-                        v.getDescription(), v.getReleaseTime()));
+                Video video = videoRepository.save(v);
                 _channel.getVideos().add(video);
-                for(Caption cap: v.getCaptions()){
-                    Caption caption = captionRepository.save(new Caption(cap.getId(), cap.getName(), cap.getLanguage()));
-                    video.getCaptions().add(caption);
-                }
+                captionRepository.saveAll(v.getCaptions());
                 for(Comment com: v.getComments()){
-                    Comment comment = commentRepository.save(new Comment(com.getId(), com.getText(), com.getCreatedOn(), com.getAuthor()));
-                    video.getComments().add(comment);
-                    User u = comment.getAuthor();
-                    userRepository.save(new User(u.getName(), u.getUser_link(), u.getPicture_link()));
+                    Comment comment = commentRepository.save(com);
+                    video.getComments().add(commentRepository.save(com));
+                    userRepository.save(comment.getAuthor());
                 }
         }
         return _channel;
@@ -65,8 +65,11 @@ public class ChannelController {
 
     // PUT http://localhost:8080/videominer/channels/{id}
     @PutMapping("/{id}")
-    public void update(@Valid @RequestBody Channel updatedChannel, @PathVariable String id) {
+    public void update(@Valid @RequestBody Channel updatedChannel, @PathVariable String id) throws ChannelNotFoundException {
         Optional<Channel> channelData = channelRepository.findById(id);
+        if (!channelData.isPresent()) {
+            throw new ChannelNotFoundException();
+        }
         Channel _channel = channelData.get();
         _channel.setName(updatedChannel.getName());
         _channel.setDescription(updatedChannel.getDescription());

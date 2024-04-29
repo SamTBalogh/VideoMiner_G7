@@ -1,6 +1,7 @@
 package aiss.videominer.controller;
 
-import aiss.videominer.model.Caption;
+import aiss.videominer.exception.CaptionNotFoundException;
+import aiss.videominer.exception.UserNotFoundException;
 import aiss.videominer.model.User;
 import aiss.videominer.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -24,24 +25,22 @@ public class UserController {
 
     // GET http://localhost:8080/videominer/users/{id}
     @GetMapping("/{id}")
-    public User findById(@PathVariable String id) {
+    public User findById(@PathVariable String id) throws UserNotFoundException {
         Optional<User> user = repository.findById(id);
+        if(!user.isPresent()){
+            throw new UserNotFoundException();
+        }
         return user.get();
-    }
-
-    //POST http://localhost:8080/videominer/users
-    @PostMapping
-    public User create(@Valid @RequestBody User user) {
-        User _user = repository.save(new User(user.getName(), user.getUser_link(), user.getPicture_link()));
-        return _user;
     }
 
     // PUT http://localhost:8080/videominer/users/{id}
     @PutMapping("/{id}")
-    public void update(@Valid @RequestBody User updatedUser, @PathVariable String id) {
+    public void update(@Valid @RequestBody User updatedUser, @PathVariable String id) throws CaptionNotFoundException {
         Optional<User> captionData = repository.findById(id);
+        if (!captionData.isPresent()) {
+            throw new CaptionNotFoundException();
+        }
         User _caption = captionData.get();
-        _caption.setId(updatedUser.getId());
         _caption.setName(updatedUser.getName());
         _caption.setUser_link(updatedUser.getUser_link());
         _caption.setPicture_link(updatedUser.getPicture_link());
