@@ -1,11 +1,13 @@
 package aiss.videominer.controller;
 
 
+import aiss.videominer.exception.TokenNotValidException;
 import aiss.videominer.model.*;
 import aiss.videominer.repository.*;
 import aiss.videominer.exception.ChannelNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +33,9 @@ public class ChannelController {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    TokenRepository tokenRepository;
+
     // GET http://localhost:8080/videominer/channels
     @GetMapping
     public List<Channel> findAll() { return channelRepository.findAll();}
@@ -48,19 +53,25 @@ public class ChannelController {
     //POST http://localhost:8080/videominer/channels
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public Channel create(@Valid @RequestBody Channel channel) {
-        Channel _channel = channelRepository.save(channel);
-            for(Video v: channel.getVideos()){
+    public Channel create(@Valid @RequestBody Channel channel, @RequestHeader HttpHeaders header) throws TokenNotValidException {
+        String token = header.getFirst("Authorization");
+        if(token!= null && tokenRepository.findById(token).isPresent()) {
+            Channel _channel = channelRepository.save(channel);
+            for (Video v : channel.getVideos()) {
                 Video video = videoRepository.save(v);
                 _channel.getVideos().add(video);
                 captionRepository.saveAll(v.getCaptions());
-                for(Comment com: v.getComments()){
+                for (Comment com : v.getComments()) {
                     Comment comment = commentRepository.save(com);
                     video.getComments().add(commentRepository.save(com));
                     userRepository.save(comment.getAuthor());
                 }
+            }
+            return _channel;
         }
-        return _channel;
+        else {
+            throw new TokenNotValidException();
+        }
     }
 
     // PUT http://localhost:8080/videominer/channels/{id}
