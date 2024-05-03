@@ -2,6 +2,7 @@ package aiss.videominer.controller;
 
 
 import aiss.videominer.exception.TokenNotValidException;
+import aiss.videominer.exception.TokenRequiredException;
 import aiss.videominer.model.*;
 import aiss.videominer.repository.*;
 import aiss.videominer.exception.ChannelNotFoundException;
@@ -53,9 +54,12 @@ public class ChannelController {
     //POST http://localhost:8080/videominer/channels
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public Channel create(@Valid @RequestBody Channel channel, @RequestHeader HttpHeaders header) throws TokenNotValidException {
+    public Channel create(@Valid @RequestBody Channel channel, @RequestHeader HttpHeaders header) throws TokenNotValidException, TokenRequiredException {
         String token = header.getFirst("Authorization");
-        if(token!= null && tokenRepository.findById(token).isPresent()) {
+        if (token==null) {
+            throw new TokenRequiredException();
+        }
+        else if(tokenRepository.findById(token).isPresent()) {
             Channel _channel = channelRepository.save(channel);
             for (Video v : channel.getVideos()) {
                 Video video = videoRepository.save(v);
@@ -68,8 +72,7 @@ public class ChannelController {
                 }
             }
             return _channel;
-        }
-        else {
+        } else {
             throw new TokenNotValidException();
         }
     }
