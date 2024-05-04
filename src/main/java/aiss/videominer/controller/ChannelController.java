@@ -39,16 +39,34 @@ public class ChannelController {
 
     // GET http://localhost:8080/videominer/channels
     @GetMapping
-    public List<Channel> findAll() { return channelRepository.findAll();}
+    public List<Channel> findAll(@RequestHeader HttpHeaders header) throws TokenNotValidException, TokenRequiredException {
+        String token = header.getFirst("Authorization");
+        if (token==null) {
+            throw new TokenRequiredException();
+        }
+        else if(tokenRepository.existsById(token)) {
+            return channelRepository.findAll();
+        } else {
+            throw new TokenNotValidException();
+        }
+    }
 
     // GET http://localhost:8080/videominer/channels/{id}
     @GetMapping("/{id}")
-    public Channel findById(@PathVariable String id) throws ChannelNotFoundException {
-        Optional<Channel> channel = channelRepository.findById(id);
-        if (!channel.isPresent()) {
-            throw new ChannelNotFoundException();
+    public Channel findById(@PathVariable String id, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException {
+        String token = header.getFirst("Authorization");
+        if (token==null) {
+            throw new TokenRequiredException();
         }
-        return channel.get();
+        else if(tokenRepository.existsById(token)) {
+            Optional<Channel> channel = channelRepository.findById(id);
+            if (!channel.isPresent()) {
+                throw new ChannelNotFoundException();
+            }
+            return channel.get();
+        } else {
+            throw new TokenNotValidException();
+        }
     }
 
     //POST http://localhost:8080/videominer/channels
@@ -59,7 +77,7 @@ public class ChannelController {
         if (token==null) {
             throw new TokenRequiredException();
         }
-        else if(tokenRepository.findById(token).isPresent()) {
+        else if(tokenRepository.existsById(token)) {
             Channel _channel = channelRepository.save(channel);
             for (Video v : channel.getVideos()) {
                 Video video = videoRepository.save(v);
@@ -79,23 +97,42 @@ public class ChannelController {
 
     // PUT http://localhost:8080/videominer/channels/{id}
     @PutMapping("/{id}")
-    public void update(@Valid @RequestBody Channel updatedChannel, @PathVariable String id) throws ChannelNotFoundException {
-        Optional<Channel> channelData = channelRepository.findById(id);
-        if (!channelData.isPresent()) {
-            throw new ChannelNotFoundException();
+    public void update(@Valid @RequestBody Channel updatedChannel, @PathVariable String id, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException {
+        String token = header.getFirst("Authorization");
+        if (token==null) {
+            throw new TokenRequiredException();
         }
-        Channel _channel = channelData.get();
-        _channel.setName(updatedChannel.getName());
-        _channel.setDescription(updatedChannel.getDescription());
-        channelRepository.save(_channel);
+        else if(tokenRepository.existsById(token)) {
+            Optional<Channel> channelData = channelRepository.findById(id);
+            if (!channelData.isPresent()) {
+                throw new ChannelNotFoundException();
+            }
+            Channel _channel = channelData.get();
+            _channel.setName(updatedChannel.getName());
+            _channel.setDescription(updatedChannel.getDescription());
+            channelRepository.save(_channel);
+        } else {
+            throw new TokenNotValidException();
+        }
     }
 
     // DELETE http://localhost:8080/videominer/channels/{id}
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable String id) {
-        if(channelRepository.existsById(id)) {
-            channelRepository.deleteById(id);
+    public void delete(@PathVariable String id, @RequestHeader HttpHeaders header) throws TokenRequiredException, TokenNotValidException, ChannelNotFoundException {
+        String token = header.getFirst("Authorization");
+        if (token==null) {
+            throw new TokenRequiredException();
+        }
+        else if(tokenRepository.existsById(token)) {
+            if(channelRepository.existsById(id)) {
+                channelRepository.deleteById(id);
+            }
+            else{
+                throw new ChannelNotFoundException();
+            }
+        } else {
+            throw new TokenNotValidException();
         }
     }
 }

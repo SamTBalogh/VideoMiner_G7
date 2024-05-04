@@ -10,6 +10,7 @@ import aiss.videominer.repository.UserRepository;
 import aiss.videominer.repository.VideoRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,11 +33,11 @@ public class CommentController {
 
     // GET http://localhost:8080/videominer/comments
     @GetMapping("/comments")
-    public List<Comment> findAll() { return commentRepository.findAll();}
+    public List<Comment> findAll(@RequestHeader HttpHeaders header) { return commentRepository.findAll();}
 
     // GET http://localhost:8080/videominer/comments/{id}
     @GetMapping("/comments/{id}")
-    public Comment findById(@PathVariable String id) throws CommentNotFoundException {
+    public Comment findById(@PathVariable String id, @RequestHeader HttpHeaders header) throws CommentNotFoundException {
         Optional<Comment> comment = commentRepository.findById(id);
         if (!comment.isPresent()) {
             throw new CommentNotFoundException();
@@ -46,7 +47,7 @@ public class CommentController {
 
     // GET http://localhost:8080/videominer/videos/{videoId}/comments
     @GetMapping("/videos/{videoId}/comments")
-    public List<Comment> getAllCommentsByVideo(@PathVariable("videoId") String videoId) throws VideoNotFoundException {
+    public List<Comment> getAllCommentsByVideo(@PathVariable("videoId") String videoId, @RequestHeader HttpHeaders header) throws VideoNotFoundException {
 
         Optional<Video> video = videoRepository.findById(videoId);
         if (!video.isPresent()) {
@@ -58,7 +59,7 @@ public class CommentController {
     // POST http://localhost:8080/videominer/videos/{videoId}/comments
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/videos/{videoId}/comments")
-    public Comment create(@PathVariable("videoId") String videoId, @Valid @RequestBody Comment commentRequest) throws VideoNotFoundException {
+    public Comment create(@PathVariable("videoId") String videoId, @Valid @RequestBody Comment commentRequest, @RequestHeader HttpHeaders header) throws VideoNotFoundException {
 
         Optional<Video> video = videoRepository.findById(videoId);
         if (!video.isPresent()) {
@@ -72,7 +73,7 @@ public class CommentController {
 
     // PUT http://localhost:8080/videominer/comments/{id}
     @PutMapping("/comments/{id}")
-    public void update(@Valid @RequestBody Comment updatedComment, @PathVariable String id) throws CommentNotFoundException {
+    public void update(@Valid @RequestBody Comment updatedComment, @PathVariable String id, @RequestHeader HttpHeaders header) throws CommentNotFoundException {
         Optional<Comment> commentData = commentRepository.findById(id);
         if (!commentData.isPresent()) {
             throw new CommentNotFoundException();
@@ -86,7 +87,7 @@ public class CommentController {
     // DELETE http://localhost:8080/videominer/comments/{id}
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/comments/{id}")
-    public void delete(@PathVariable String id) {
+    public void delete(@PathVariable String id, @RequestHeader HttpHeaders header) {
         if(commentRepository.existsById(id)) {
             commentRepository.deleteById(id);
         }

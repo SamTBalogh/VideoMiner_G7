@@ -1,5 +1,7 @@
 package aiss.videominer.controller;
 
+import aiss.videominer.exception.TokenNotValidException;
+import aiss.videominer.exception.TokenRequiredException;
 import aiss.videominer.exception.VideoNotFoundException;
 import aiss.videominer.exception.ChannelNotFoundException;
 import aiss.videominer.model.Channel;
@@ -8,6 +10,7 @@ import aiss.videominer.model.Video;
 import aiss.videominer.repository.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,74 +34,128 @@ public class VideoController {
 
     @Autowired
     CommentRepository commentRepository;
+
     @Autowired
-    private UserRepository userRepository;
+    UserRepository userRepository;
+
+    @Autowired
+    TokenRepository tokenRepository;
 
     // GET http://localhost:8080/videominer/videos
     @GetMapping("/videos")
-    public List<Video> findAll() { return videoRepository.findAll();}
+    public List<Video> findAll(@RequestHeader HttpHeaders header) throws TokenRequiredException, TokenNotValidException {
+        String token = header.getFirst("Authorization");
+        if (token==null) {
+            throw new TokenRequiredException();
+        }
+        else if(tokenRepository.existsById(token)) {
+            return videoRepository.findAll();
+        } else {
+            throw new TokenNotValidException();
+        }
+}
 
     // GET http://localhost:8080/videominer/videos/{id}
     @GetMapping("/videos/{id}")
-    public Video findById(@PathVariable String id) throws VideoNotFoundException {
-        Optional<Video> video = videoRepository.findById(id);
-        if(!video.isPresent()){
-            throw new VideoNotFoundException();
+    public Video findById(@PathVariable String id, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
+        String token = header.getFirst("Authorization");
+        if (token==null) {
+            throw new TokenRequiredException();
         }
-        return video.get();
+        else if(tokenRepository.existsById(token)) {
+            Optional<Video> video = videoRepository.findById(id);
+            if(!video.isPresent()){
+                throw new VideoNotFoundException();
+            }
+            return video.get();
+        } else {
+            throw new TokenNotValidException();
+        }
     }
 
     // GET http://localhost:8080/videominer/channels/{channelId}/videos
     @GetMapping("/channels/{channelId}/videos")
-    public List<Video> getAllVideosByChannel(@PathVariable("channelId") String channelId) throws ChannelNotFoundException {
-
-        Optional<Channel> channel = channelRepository.findById(channelId);
-        if (!channel.isPresent()) {
-            throw new ChannelNotFoundException();
+    public List<Video> getAllVideosByChannel(@PathVariable("channelId") String channelId, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException {
+        String token = header.getFirst("Authorization");
+        if (token==null) {
+            throw new TokenRequiredException();
         }
-        return new ArrayList<>(channel.get().getVideos());
+        else if(tokenRepository.existsById(token)) {
+            Optional<Channel> channel = channelRepository.findById(channelId);
+            if (!channel.isPresent()) {
+                throw new ChannelNotFoundException();
+            }
+            return new ArrayList<>(channel.get().getVideos());
+        } else {
+            throw new TokenNotValidException();
+        }
     }
 
     // POST http://localhost:8080/videominer/channels/{channelId}/videos
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/channels/{channelId}/videos")
-    public Video create(@PathVariable("channelId") String channelId, @Valid @RequestBody Video videoRequest) throws ChannelNotFoundException {
-
-        Optional<Channel> channel = channelRepository.findById(channelId);
-        if (!channel.isPresent()) {
-            throw new ChannelNotFoundException();
+    public Video create(@PathVariable("channelId") String channelId, @Valid @RequestBody Video videoRequest, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException {
+        String token = header.getFirst("Authorization");
+        if (token==null) {
+            throw new TokenRequiredException();
         }
-        channel.get().getVideos().add(videoRequest);
-        for (Comment comment : videoRequest.getComments()) {
-            userRepository.save(comment.getAuthor());
-            commentRepository.save(comment);
-        }
-        captionRepository.saveAll(videoRequest.getCaptions());
+        else if(tokenRepository.existsById(token)) {
+            Optional<Channel> channel = channelRepository.findById(channelId);
+            if (!channel.isPresent()) {
+                throw new ChannelNotFoundException();
+            }
+            channel.get().getVideos().add(videoRequest);
+            for (Comment comment : videoRequest.getComments()) {
+                userRepository.save(comment.getAuthor());
+                commentRepository.save(comment);
+            }
+            captionRepository.saveAll(videoRequest.getCaptions());
 
-        return videoRepository.save(videoRequest);
+            return videoRepository.save(videoRequest);
+        } else {
+            throw new TokenNotValidException();
+        }
     }
 
     // PUT http://localhost:8080/videominer/videos/{id}
     @PutMapping("/videos/{id}")
-    public void update(@Valid @RequestBody Video updatedVideo, @PathVariable String id) throws VideoNotFoundException {
-        Optional<Video> videoData = videoRepository.findById(id);
-        if (!videoData.isPresent()) {
-            throw new VideoNotFoundException();
+    public void update(@Valid @RequestBody Video updatedVideo, @PathVariable String id, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
+        String token = header.getFirst("Authorization");
+        if (token==null) {
+            throw new TokenRequiredException();
         }
-        Video _video = videoData.get();
-        _video.setId(updatedVideo.getId());
-        _video.setName(updatedVideo.getName());
-        _video.setDescription(updatedVideo.getDescription());
-        _video.setReleaseTime(updatedVideo.getReleaseTime());
-        videoRepository.save(_video);
+        else if(tokenRepository.existsById(token)) {
+            Optional<Video> videoData = videoRepository.findById(id);
+            if (!videoData.isPresent()) {
+                throw new VideoNotFoundException();
+            }
+            Video _video = videoData.get();
+            _video.setName(updatedVideo.getName());
+            _video.setDescription(updatedVideo.getDescription());
+            _video.setReleaseTime(updatedVideo.getReleaseTime());
+            videoRepository.save(_video);
+        } else {
+            throw new TokenNotValidException();
+        }
     }
 
     // DELETE http://localhost:8080/videominer/videos/{id}
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/videos/{id}")
-    public void delete(@PathVariable String id) {
-        if(videoRepository.existsById(id)) {
-            videoRepository.deleteById(id);
+    public void delete(@PathVariable String id, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
+        String token = header.getFirst("Authorization");
+        if (token==null) {
+            throw new TokenRequiredException();
+        }
+        else if(tokenRepository.existsById(token)) {
+            if(videoRepository.existsById(id)) {
+                videoRepository.deleteById(id);
+            }
+            else {
+                throw new VideoNotFoundException();
+            }
+        } else {
+            throw new TokenNotValidException();
         }
     }
 }
