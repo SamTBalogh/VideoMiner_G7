@@ -6,6 +6,13 @@ import aiss.videominer.model.Video;
 import aiss.videominer.repository.CaptionRepository;
 import aiss.videominer.repository.TokenRepository;
 import aiss.videominer.repository.VideoRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+@Tag(name="Caption", description="Caption management API")
 @RestController
 @RequestMapping("/videominer/v1")
 public class CaptionController {
@@ -33,6 +41,14 @@ public class CaptionController {
     TokenRepository tokenRepository;
 
     // GET http://localhost:8080/videominer/v1/captions
+    @Operation( summary = "Retrieve a list of captions",
+                description = "Get a list of captions with different options in paging, ordering and filtering",
+                tags = {"captions", "get"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = Caption.class), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/captions")
     public List<Caption> findAll(@RequestHeader HttpHeaders header,
@@ -81,9 +97,18 @@ public class CaptionController {
     }
 
     // GET http://localhost:8080/videominer/v1/captions/{id}
+    @Operation( summary = "Retrieve a Caption by Id",
+            description = "Get a Caption object by specifying its id",
+            tags = {"captions", "get"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = Caption.class), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/captions/{id}")
-    public Caption findById(@PathVariable String id, @RequestHeader HttpHeaders header) throws CaptionNotFoundException, TokenRequiredException, TokenNotValidException {
+    public Caption findById(@Parameter(description = "Id of the caption to be searched") @PathVariable String id, @RequestHeader HttpHeaders header) throws CaptionNotFoundException, TokenRequiredException, TokenNotValidException {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
@@ -100,9 +125,19 @@ public class CaptionController {
     }
 
     //GET http://localhost:8080/videominer/v1/videos/{videoId}/captions
+    @Operation( summary = "Retrieve the list of captions of a Video",
+            description = "Get a list of captions associated with the video Id",
+            tags = {"captions", "get"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = Caption.class), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/videos/{videoId}/captions")
-    public List<Caption> getAllCaptionsByVideo(@PathVariable("videoId") String videoId, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
+    public List<Caption> getAllCaptionsByVideo(@Parameter (description = "The Id of the video for which captions are to be retrieved") @PathVariable("videoId") String videoId,
+                                               @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
@@ -119,9 +154,19 @@ public class CaptionController {
     }
 
     //POST http://localhost:8080/videominer/v1/videos/{videoId}/captions
+    @Operation( summary = "Insert a Caption into the list of captions of a Video",
+            description = "Post a Caption object into the list of captions associated with the video Id, the Caption data is passed in the body of the request in JSON format",
+            tags = {"captions", "post"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", content = {@Content(schema=@Schema(implementation = Caption.class), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/videos/{videoId}/captions")
-    public List<Caption> create(@PathVariable("videoId") String videoId, @Valid @RequestBody Caption caption, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
+    public List<Caption> create(@Parameter(description = "The ID of the video to which the caption is added") @PathVariable("videoId") String videoId,
+                                @Valid @RequestBody Caption caption, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
@@ -141,9 +186,20 @@ public class CaptionController {
     }
 
     // PUT http://localhost:8080/videominer/v1/captions/{id}
+    @Operation( summary = "Update a Caption",
+            description = "Update a Caption object by specifying its Id and whose data is passed in the body of the request in JSON format",
+            tags = {"captions", "put"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/captions/{id}")
-    public void update(@Valid @RequestBody Caption updatedCaption, @PathVariable String id, @RequestHeader HttpHeaders header) throws CaptionNotFoundException, TokenRequiredException, TokenNotValidException {
+    public void update(@Valid @RequestBody Caption updatedCaption,
+                       @Parameter(description = "Id of the caption to be updated") @PathVariable String id,
+                       @RequestHeader HttpHeaders header) throws CaptionNotFoundException, TokenRequiredException, TokenNotValidException {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
@@ -163,9 +219,19 @@ public class CaptionController {
     }
 
     // DELETE http://localhost:8080/videominer/v1/captions/{id}
+    @Operation( summary = "Delete a Caption",
+            description = "Delete a Caption object by specifying its Id",
+            tags = {"captions", "delete"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/captions/{id}")
-    public void delete(@PathVariable String id, @RequestHeader HttpHeaders header) throws TokenRequiredException, TokenNotValidException, CaptionNotFoundException {
+    public void delete(@Parameter(description = "Id of the caption to be deleted") @PathVariable String id,
+                       @RequestHeader HttpHeaders header) throws TokenRequiredException, TokenNotValidException, CaptionNotFoundException {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
