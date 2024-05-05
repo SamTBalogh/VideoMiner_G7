@@ -41,7 +41,7 @@ public class UserController {
                               @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
                               @RequestParam(required = false) String id, @RequestParam(required = false) String name,
                               @RequestParam(required = false) String userLink, @RequestParam(required = false) String pictureLink,
-                              @RequestParam(required = false) String order) throws TokenRequiredException, TokenNotValidException, BadRequestParameterField {
+                              @RequestParam(required = false) String order) throws TokenRequiredException, TokenNotValidException, BadRequestParameterField, BadRequestIdParameter {
         String token = header.getFirst("Authorization");
         if (token == null) {
             throw new TokenRequiredException();
@@ -69,7 +69,12 @@ public class UserController {
             }
 
             if (id != null) {
-                pageChannels = userRepository.findById(Long.valueOf(id), paging);
+                try{
+                    Long idL = Long.valueOf(id);
+                    pageChannels = userRepository.findById(idL, paging);
+                }catch(NumberFormatException  e) {
+                    throw new BadRequestIdParameter();
+                }
             } else if (name != null) {
                 pageChannels = userRepository.findByName(name, paging);
             } else if (userLink != null) {
@@ -94,7 +99,7 @@ public class UserController {
         if (token == null) {
             throw new TokenRequiredException();
         } else if (tokenRepository.existsById(token)) {
-            Optional<User> user = userRepository.findById(Long.valueOf(id));
+            Optional<User> user = userRepository.findById(id);
             if(!user.isPresent()){
                 throw new UserNotFoundException();
             }
@@ -131,7 +136,7 @@ public class UserController {
         if (token == null) {
             throw new TokenRequiredException();
         } else if (tokenRepository.existsById(token)) {
-            Optional<User> userData = userRepository.findById(Long.valueOf(id));
+            Optional<User> userData = userRepository.findById(id);
             if (!userData.isPresent()) {
                 throw new UserNotFoundException();
             }

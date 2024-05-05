@@ -185,7 +185,7 @@ public class CommentController {
                 throw new CommentNotFoundException();
             }
             else {
-                Long userId = comment.get().getAuthor().getId();
+                String userId = String.valueOf(comment.get().getAuthor().getId());
                 commentRepository.deleteById(id);
                 userRepository.deleteById(userId);
         }
