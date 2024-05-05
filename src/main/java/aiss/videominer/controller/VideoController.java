@@ -1,15 +1,16 @@
 package aiss.videominer.controller;
 
-import aiss.videominer.exception.TokenNotValidException;
-import aiss.videominer.exception.TokenRequiredException;
-import aiss.videominer.exception.VideoNotFoundException;
-import aiss.videominer.exception.ChannelNotFoundException;
+import aiss.videominer.exception.*;
 import aiss.videominer.model.Channel;
 import aiss.videominer.model.Comment;
 import aiss.videominer.model.Video;
 import aiss.videominer.repository.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -44,13 +45,50 @@ public class VideoController {
     // GET http://localhost:8080/videominer/v1/videos
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/videos")
-    public List<Video> findAll(@RequestHeader HttpHeaders header) throws TokenRequiredException, TokenNotValidException {
+    public List<Video> findAll(@RequestHeader HttpHeaders header,
+                               @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
+                               @RequestParam(required = false) String id, @RequestParam(required = false) String name,
+                               @RequestParam(required = false) String description, @RequestParam(required = false) String releaseTime,
+                               @RequestParam(required = false) String order) throws TokenRequiredException, TokenNotValidException, BadRequestParameterField {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
         }
         else if(tokenRepository.existsById(token)) {
-            return videoRepository.findAll();
+            Page<Video> pageChannels;
+            Pageable paging;
+            if(order!=null){
+                if(order.startsWith("-")){
+                    paging = PageRequest.of(page, size, Sort.by(order.substring(1)).descending());
+                }
+                else{
+                    paging = PageRequest.of(page, size, Sort.by(order).ascending());
+                }
+            }else{
+                paging = PageRequest.of(page, size);
+            }
+            int count = 0;
+            if (id != null) count++;
+            if (name != null) count++;
+            if (description != null) count++;
+            if (releaseTime != null) count++;
+
+            if (count > 1) {
+                throw new BadRequestParameterField();
+            }
+
+            if (id != null) {
+                pageChannels = videoRepository.findById(id, paging);
+            } else if (name != null) {
+                pageChannels = videoRepository.findByName(name, paging);
+            } else if (description != null) {
+                pageChannels = videoRepository.findByDescriptionContaining(description, paging);
+            } else if (releaseTime != null) {
+                pageChannels = videoRepository.findByReleaseTimeContaining(releaseTime, paging);
+            } else {
+                pageChannels = videoRepository.findAll(paging);
+            }
+            return pageChannels.getContent();
         } else {
             throw new TokenNotValidException();
         }

@@ -25,17 +25,17 @@ public class User {
     private String name;
 
     @JsonProperty("user_link")
-    private String user_link;
+    private String userLink;
 
     @JsonProperty("picture_link")
-    private String picture_link;
+    private String pictureLink;
 
     public User() {}
 
     public User(String name, String userLink, String pictureLink) {
         this.name = name;
-        this.user_link = userLink;
-        this.picture_link = pictureLink;
+        this.userLink = userLink;
+        this.pictureLink = pictureLink;
     }
 
     public Long getId() {
@@ -55,19 +55,19 @@ public class User {
     }
 
     public String getUser_link() {
-        return user_link;
+        return userLink;
     }
 
     public void setUser_link(String user_link) {
-        this.user_link = user_link;
+        this.userLink = user_link;
     }
 
     public String getPicture_link() {
-        return picture_link;
+        return pictureLink;
     }
 
     public void setPicture_link(String picture_link) {
-        this.picture_link = picture_link;
+        this.pictureLink = picture_link;
     }
 
     @Override
@@ -75,8 +75,8 @@ public class User {
         return "User{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
-                ", user_link='" + user_link + '\'' +
-                ", picture_link='" + picture_link + '\'' +
+                ", user_link='" + userLink + '\'' +
+                ", picture_link='" + pictureLink + '\'' +
                 '}';
     }
 

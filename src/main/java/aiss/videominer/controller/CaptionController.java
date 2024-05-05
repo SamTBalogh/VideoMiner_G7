@@ -1,9 +1,6 @@
 package aiss.videominer.controller;
 
-import aiss.videominer.exception.CaptionNotFoundException;
-import aiss.videominer.exception.TokenNotValidException;
-import aiss.videominer.exception.TokenRequiredException;
-import aiss.videominer.exception.VideoNotFoundException;
+import aiss.videominer.exception.*;
 import aiss.videominer.model.Caption;
 import aiss.videominer.model.Video;
 import aiss.videominer.repository.CaptionRepository;
@@ -11,6 +8,10 @@ import aiss.videominer.repository.TokenRepository;
 import aiss.videominer.repository.VideoRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -34,13 +35,46 @@ public class CaptionController {
     // GET http://localhost:8080/videominer/v1/captions
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/captions")
-    public List<Caption> findAll(@RequestHeader HttpHeaders header) throws TokenRequiredException, TokenNotValidException {
+    public List<Caption> findAll(@RequestHeader HttpHeaders header,
+                                 @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
+                                 @RequestParam(required = false) String id, @RequestParam(required = false) String name,
+                                 @RequestParam(required = false) String language, @RequestParam(required = false) String order) throws TokenRequiredException, TokenNotValidException, BadRequestParameterField {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
         }
         else if(tokenRepository.existsById(token)) {
-            return captionRepository.findAll();
+            Page<Caption> pageChannels;
+            Pageable paging;
+            if(order!=null){
+                if(order.startsWith("-")){
+                    paging = PageRequest.of(page, size, Sort.by(order.substring(1)).descending());
+                }
+                else{
+                    paging = PageRequest.of(page, size, Sort.by(order).ascending());
+                }
+            }else{
+                paging = PageRequest.of(page, size);
+            }
+            int count = 0;
+            if (id != null) count++;
+            if (name != null) count++;
+            if (language != null) count++;
+
+            if (count > 1) {
+                throw new BadRequestParameterField();
+            }
+
+            if (id != null) {
+                pageChannels = captionRepository.findById(id, paging);
+            } else if (name != null) {
+                pageChannels = captionRepository.findByName(name, paging);
+            } else if (language != null) {
+                pageChannels = captionRepository.findByLanguage(language, paging);
+            } else {
+                pageChannels = captionRepository.findAll(paging);
+            }
+            return pageChannels.getContent();
         } else {
             throw new TokenNotValidException();
         }

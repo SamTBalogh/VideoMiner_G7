@@ -1,13 +1,22 @@
 package aiss.videominer.controller;
 
 
-import aiss.videominer.exception.TokenNotValidException;
-import aiss.videominer.exception.TokenRequiredException;
-import aiss.videominer.model.*;
-import aiss.videominer.repository.*;
-import aiss.videominer.exception.ChannelNotFoundException;
+import aiss.videominer.exception.*;
+import aiss.videominer.model.Comment;
+import aiss.videominer.model.Channel;
+import aiss.videominer.model.Video;
+import aiss.videominer.repository.CaptionRepository;
+import aiss.videominer.repository.ChannelRepository;
+import aiss.videominer.repository.CommentRepository;
+import aiss.videominer.repository.TokenRepository;
+import aiss.videominer.repository.UserRepository;
+import aiss.videominer.repository.VideoRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -40,13 +49,51 @@ public class ChannelController {
     // GET http://localhost:8080/videominer/v1/channels
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/channels")
-    public List<Channel> findAll(@RequestHeader HttpHeaders header) throws TokenNotValidException, TokenRequiredException {
+    public List<Channel> findAll(@RequestHeader HttpHeaders header,
+                                 @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
+                                 @RequestParam(required = false) String id, @RequestParam(required = false) String name,
+                                 @RequestParam(required = false) String description, @RequestParam(required = false) String createdTime,
+                                 @RequestParam(required = false) String order) throws TokenNotValidException, TokenRequiredException, BadRequestParameterField {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
         }
         else if(tokenRepository.existsById(token)) {
-            return channelRepository.findAll();
+            Page<Channel> pageChannels;
+            Pageable paging;
+            if(order!=null){
+                if(order.startsWith("-")){
+                    paging = PageRequest.of(page, size, Sort.by(order.substring(1)).descending());
+                }
+                else{
+                    paging = PageRequest.of(page, size, Sort.by(order).ascending());
+                }
+            }else{
+                paging = PageRequest.of(page, size);
+            }
+
+            int count = 0;
+            if (id != null) count++;
+            if (name != null) count++;
+            if (description != null) count++;
+            if (createdTime != null) count++;
+
+            if (count > 1) {
+                throw new BadRequestParameterField();
+            }
+
+            if (id != null) {
+                pageChannels = channelRepository.findByIdContaining(id, paging);
+            } else if (name != null) {
+                pageChannels = channelRepository.findByNameContaining(name, paging);
+            } else if (description != null) {
+                pageChannels = channelRepository.findByDescriptionContaining(description, paging);
+            } else if (createdTime != null) {
+                pageChannels = channelRepository.findByCreatedTimeContaining(createdTime, paging);
+            } else {
+                pageChannels = channelRepository.findAll(paging);
+            }
+            return pageChannels.getContent();
         } else {
             throw new TokenNotValidException();
         }
@@ -87,7 +134,7 @@ public class ChannelController {
                 captionRepository.saveAll(v.getCaptions());
                 for (Comment com : v.getComments()) {
                     Comment comment = commentRepository.save(com);
-                    video.getComments().add(commentRepository.save(com));
+                    video.getComments().add(comment);
                     userRepository.save(comment.getAuthor());
                 }
             }
