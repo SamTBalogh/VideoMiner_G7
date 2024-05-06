@@ -1,10 +1,21 @@
 package aiss.videominer.controller;
 
-import aiss.videominer.exception.*;
+import aiss.videominer.exception.BadRequestParameterField;
+import aiss.videominer.exception.ChannelNotFoundException;
+import aiss.videominer.exception.TokenNotValidException;
+import aiss.videominer.exception.TokenRequiredException;
+import aiss.videominer.exception.VideoNotFoundException;
 import aiss.videominer.model.Channel;
 import aiss.videominer.model.Comment;
 import aiss.videominer.model.Video;
 import aiss.videominer.repository.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Tag(name="Video", description="Video management API")
 @RestController
 @RequestMapping("/videominer/v1")
 public class VideoController {
@@ -43,6 +55,14 @@ public class VideoController {
     TokenRepository tokenRepository;
 
     // GET http://localhost:8080/videominer/v1/videos
+    @Operation( summary = "Retrieve a list of videos",
+            description = "Get a list of videos with different options in paging, ordering and filtering. Only one of the filter parameters (id, name, description, order) may be present at the same time",
+            tags = {"videos", "get"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema=@Schema(implementation = Video.class)), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/videos")
     public List<Video> findAll(@RequestHeader HttpHeaders header,
@@ -95,6 +115,14 @@ public class VideoController {
 }
 
     // GET http://localhost:8080/videominer/v1/videos/{id}
+    @Operation( summary = "Retrieve a Video by Id",
+            description = "Get a Video object by specifying its id",
+            tags = {"videos", "get"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = Video.class), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/videos/{id}")
     public Video findById(@PathVariable String id, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
@@ -114,6 +142,14 @@ public class VideoController {
     }
 
     // GET http://localhost:8080/videominer/v1/channels/{channelId}/videos
+    @Operation( summary = "Retrieve the list of videos of a Channel",
+            description = "Get a list of videos associated with the channel Id",
+            tags = {"videos", "get"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema=@Schema(implementation = Video.class)), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/channels/{channelId}/videos")
     public List<Video> getAllVideosByChannel(@PathVariable("channelId") String channelId, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException {
@@ -133,6 +169,15 @@ public class VideoController {
     }
 
     // POST http://localhost:8080/videominer/v1/channels/{channelId}/videos
+    @Operation( summary = "Insert a Video into the list of videos of a Channel",
+            description = "Add a Video object into the list of videos associated with the channel Id, the Video data is passed in the body of the request in JSON format",
+            tags = {"videos", "post"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", content = {@Content(schema=@Schema(implementation = Video.class), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/channels/{channelId}/videos")
     public Video create(@PathVariable("channelId") String channelId, @Valid @RequestBody Video videoRequest, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException {
@@ -160,6 +205,15 @@ public class VideoController {
     }
 
     // PUT http://localhost:8080/videominer/v1/videos/{id}
+    @Operation( summary = "Update a Video",
+            description = "Update a Video object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id, the comments list or the captions list can be modified.",
+            tags = {"videos", "put"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/videos/{id}")
     public void update(@Valid @RequestBody Video updatedVideo, @PathVariable String id, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
@@ -183,6 +237,14 @@ public class VideoController {
     }
 
     // DELETE http://localhost:8080/videominer/v1/videos/{id}
+    @Operation( summary = "Delete a Video",
+            description = "Delete a Video object by specifying its Id",
+            tags = {"videos", "delete"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/videos/{id}")
     public void delete(@PathVariable String id, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {

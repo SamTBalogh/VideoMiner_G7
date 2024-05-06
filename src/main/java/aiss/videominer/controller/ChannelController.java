@@ -1,7 +1,10 @@
 package aiss.videominer.controller;
 
 
-import aiss.videominer.exception.*;
+import aiss.videominer.exception.BadRequestParameterField;
+import aiss.videominer.exception.ChannelNotFoundException;
+import aiss.videominer.exception.TokenNotValidException;
+import aiss.videominer.exception.TokenRequiredException;
 import aiss.videominer.model.Comment;
 import aiss.videominer.model.Channel;
 import aiss.videominer.model.Video;
@@ -11,6 +14,13 @@ import aiss.videominer.repository.CommentRepository;
 import aiss.videominer.repository.TokenRepository;
 import aiss.videominer.repository.UserRepository;
 import aiss.videominer.repository.VideoRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+@Tag(name="Channel", description="Channel management API")
 @RestController
 @RequestMapping("/videominer/v1")
 public class ChannelController {
@@ -49,6 +60,14 @@ public class ChannelController {
     // GET http://localhost:8080/videominer/v1/channels
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/channels")
+    @Operation( summary = "Retrieve a list of channels",
+            description = "Get a list of channels with different options in paging, ordering and filtering. Only one of the filter parameters (id, name, description, createdTime) may be present at the same time",
+            tags = {"channels", "get"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema=@Schema(implementation = Channel.class)), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())})
+    })
     public List<Channel> findAll(@RequestHeader HttpHeaders header,
                                  @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
                                  @RequestParam(required = false) String id, @RequestParam(required = false) String name,
@@ -100,6 +119,14 @@ public class ChannelController {
     }
 
     // GET http://localhost:8080/videominer/v1/channels/{id}
+    @Operation( summary = "Retrieve a Channel by Id",
+            description = "Get a Channel object by specifying its id",
+            tags = {"channels", "get"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = Channel.class), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/channels/{id}")
     public Channel findById(@PathVariable String id, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException {
@@ -118,7 +145,15 @@ public class ChannelController {
         }
     }
 
-    //POST http://localhost:8080/videominer/v1/channels
+    // POST http://localhost:8080/videominer/v1/channels
+    @Operation( summary = "Insert a Channel ",
+            description = "Add a Channel object, the Channel data is passed in the body of the request in JSON format",
+            tags = {"channels", "post"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", content = {@Content(schema=@Schema(implementation = Channel.class), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/channels")
     public Channel create(@Valid @RequestBody Channel channel, @RequestHeader HttpHeaders header) throws TokenNotValidException, TokenRequiredException {
@@ -145,6 +180,15 @@ public class ChannelController {
     }
 
     // PUT http://localhost:8080/videominer/v1/channels/{id}
+    @Operation( summary = "Update a Channel",
+            description = "Update a Channel object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id or the createdTime fields can be modified.",
+            tags = {"channels", "put"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/channels/{id}")
     public void update(@Valid @RequestBody Channel updatedChannel, @PathVariable String id, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException {
@@ -167,6 +211,14 @@ public class ChannelController {
     }
 
     // DELETE http://localhost:8080/videominer/v1/channels/{id}
+    @Operation( summary = "Delete a Channel",
+            description = "Delete a Channel object by specifying its Id",
+            tags = {"channels", "delete"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/channels/{id}")
     public void delete(@PathVariable String id, @RequestHeader HttpHeaders header) throws TokenRequiredException, TokenNotValidException, ChannelNotFoundException {

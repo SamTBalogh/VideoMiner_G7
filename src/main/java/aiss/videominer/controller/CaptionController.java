@@ -1,6 +1,10 @@
 package aiss.videominer.controller;
 
-import aiss.videominer.exception.*;
+import aiss.videominer.exception.BadRequestParameterField;
+import aiss.videominer.exception.CaptionNotFoundException;
+import aiss.videominer.exception.TokenNotValidException;
+import aiss.videominer.exception.TokenRequiredException;
+import aiss.videominer.exception.VideoNotFoundException;
 import aiss.videominer.model.Caption;
 import aiss.videominer.model.Video;
 import aiss.videominer.repository.CaptionRepository;
@@ -8,6 +12,7 @@ import aiss.videominer.repository.TokenRepository;
 import aiss.videominer.repository.VideoRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -42,10 +47,10 @@ public class CaptionController {
 
     // GET http://localhost:8080/videominer/v1/captions
     @Operation( summary = "Retrieve a list of captions",
-                description = "Get a list of captions with different options in paging, ordering and filtering",
+                description = "Get a list of captions with different options in paging, ordering and filtering. Only one of the filter parameters (id, name, language) may be present at the same time",
                 tags = {"captions", "get"})
     @ApiResponses({
-            @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = Caption.class), mediaType = "application/json")}),
+            @ApiResponse(responseCode = "200", content = {@Content (array = @ArraySchema(schema=@Schema(implementation = Caption.class)), mediaType = "application/json")}),
             @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
             @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())})
     })
@@ -102,7 +107,6 @@ public class CaptionController {
             tags = {"captions", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = Caption.class), mediaType = "application/json")}),
-            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
             @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
             @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
     })
@@ -124,19 +128,18 @@ public class CaptionController {
         }
     }
 
-    //GET http://localhost:8080/videominer/v1/videos/{videoId}/captions
+    // GET http://localhost:8080/videominer/v1/videos/{videoId}/captions
     @Operation( summary = "Retrieve the list of captions of a Video",
             description = "Get a list of captions associated with the video Id",
             tags = {"captions", "get"})
     @ApiResponses({
-            @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = Caption.class), mediaType = "application/json")}),
-            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema=@Schema(implementation = Caption.class)), mediaType = "application/json")}),
             @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
             @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
     })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/videos/{videoId}/captions")
-    public List<Caption> getAllCaptionsByVideo(@Parameter (description = "The Id of the video for which captions are to be retrieved") @PathVariable("videoId") String videoId,
+    public List<Caption> getAllCaptionsByVideo(@Parameter (description = "The Id of the video which captions are to be retrieved") @PathVariable("videoId") String videoId,
                                                @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
         String token = header.getFirst("Authorization");
         if (token==null) {
@@ -153,9 +156,9 @@ public class CaptionController {
         }
     }
 
-    //POST http://localhost:8080/videominer/v1/videos/{videoId}/captions
+    // POST http://localhost:8080/videominer/v1/videos/{videoId}/captions
     @Operation( summary = "Insert a Caption into the list of captions of a Video",
-            description = "Post a Caption object into the list of captions associated with the video Id, the Caption data is passed in the body of the request in JSON format",
+            description = "Add a Caption object into the list of captions associated with the video Id, the Caption data is passed in the body of the request in JSON format",
             tags = {"captions", "post"})
     @ApiResponses({
             @ApiResponse(responseCode = "201", content = {@Content(schema=@Schema(implementation = Caption.class), mediaType = "application/json")}),
@@ -187,7 +190,7 @@ public class CaptionController {
 
     // PUT http://localhost:8080/videominer/v1/captions/{id}
     @Operation( summary = "Update a Caption",
-            description = "Update a Caption object by specifying its Id and whose data is passed in the body of the request in JSON format",
+            description = "Update a Caption object by specifying its Id and whose data is passed in the body of the request in JSON format. The id field cannot be modified.",
             tags = {"captions", "put"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
@@ -224,7 +227,6 @@ public class CaptionController {
             tags = {"captions", "delete"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
-            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
             @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
             @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
     })
