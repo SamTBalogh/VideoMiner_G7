@@ -1,10 +1,6 @@
 package aiss.videominer.controller;
 
-import aiss.videominer.exception.BadRequestParameterField;
-import aiss.videominer.exception.ChannelNotFoundException;
-import aiss.videominer.exception.TokenNotValidException;
-import aiss.videominer.exception.TokenRequiredException;
-import aiss.videominer.exception.VideoNotFoundException;
+import aiss.videominer.exception.*;
 import aiss.videominer.model.Channel;
 import aiss.videominer.model.Comment;
 import aiss.videominer.model.Video;
@@ -180,12 +176,15 @@ public class VideoController {
     })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/channels/{channelId}/videos")
-    public Video create(@PathVariable("channelId") String channelId, @Valid @RequestBody Video videoRequest, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException {
+    public Video create(@PathVariable("channelId") String channelId, @Valid @RequestBody Video videoRequest, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException, IdCannotBeNull {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
         }
         else if(tokenRepository.existsById(token)) {
+            if(videoRequest.getId() == null){
+                throw new IdCannotBeNull();
+            }
             Optional<Channel> channel = channelRepository.findById(channelId);
             if (!channel.isPresent()) {
                 throw new ChannelNotFoundException();
@@ -206,7 +205,7 @@ public class VideoController {
 
     // PUT http://localhost:8080/videoMiner/v1/videos/{id}
     @Operation( summary = "Update a Video",
-            description = "Update a Video object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id, the comments list or the captions list can be modified.",
+            description = "Update a Video object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id, the releaseTime, the comments list or the captions list can be modified.",
             tags = {"videos", "put"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
@@ -228,8 +227,9 @@ public class VideoController {
             }
             Video _video = videoData.get();
             _video.setName(updatedVideo.getName());
-            _video.setDescription(updatedVideo.getDescription());
-            _video.setReleaseTime(updatedVideo.getReleaseTime());
+            if(updatedVideo.getDescription() != null){
+                _video.setDescription(updatedVideo.getDescription());
+            }
             videoRepository.save(_video);
         } else {
             throw new TokenNotValidException();

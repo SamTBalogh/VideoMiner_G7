@@ -1,10 +1,6 @@
 package aiss.videominer.controller;
 
-import aiss.videominer.exception.BadRequestParameterField;
-import aiss.videominer.exception.CommentNotFoundException;
-import aiss.videominer.exception.TokenNotValidException;
-import aiss.videominer.exception.TokenRequiredException;
-import aiss.videominer.exception.VideoNotFoundException;
+import aiss.videominer.exception.*;
 import aiss.videominer.model.Comment;
 import aiss.videominer.model.User;
 import aiss.videominer.model.Video;
@@ -172,12 +168,15 @@ public class CommentController {
     })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/videos/{videoId}/comments")
-    public Comment create(@PathVariable("videoId") String videoId, @Valid @RequestBody Comment commentRequest, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
+    public Comment create(@PathVariable("videoId") String videoId, @Valid @RequestBody Comment commentRequest, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException, IdCannotBeNull {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
         }
         else if(tokenRepository.existsById(token)) {
+            if(commentRequest.getId() == null){
+                throw new IdCannotBeNull();
+            }
             Optional<Video> video = videoRepository.findById(videoId);
             if (!video.isPresent()) {
                 throw new VideoNotFoundException();
@@ -205,7 +204,7 @@ public class CommentController {
     })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/comments/{id}")
-    public void update(@Valid @RequestBody Comment updatedComment, @PathVariable String id, @RequestHeader HttpHeaders header) throws CommentNotFoundException, TokenRequiredException, TokenNotValidException {
+    public void update(@Valid @RequestBody Comment updatedComment, @PathVariable String id, @RequestHeader HttpHeaders header) throws CommentNotFoundException, TokenRequiredException, TokenNotValidException{
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
@@ -216,8 +215,12 @@ public class CommentController {
                 throw new CommentNotFoundException();
             }
             Comment _comment = commentData.get();
-            _comment.setText(updatedComment.getText());
-            _comment.setCreatedOn(updatedComment.getCreatedOn());
+            if(updatedComment.getText()!=null){
+                _comment.setText(updatedComment.getText());
+            }
+            if(updatedComment.getCreatedOn()!=null){
+                _comment.setText(updatedComment.getCreatedOn());
+            }
             commentRepository.save(_comment);
         } else {
             throw new TokenNotValidException();
@@ -226,7 +229,7 @@ public class CommentController {
 
     // DELETE http://localhost:8080/videoMiner/v1/comments/{id}
     @Operation( summary = "Delete a Comment",
-            description = "Delete a Comment object by specifying its Id",
+            description = "Delete a Comment object by specifying its Id. Because the relation with User in the model is 1-1 the user linked will be deleted too.",
             tags = {"comments", "delete"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
@@ -245,11 +248,7 @@ public class CommentController {
             if(!comment.isPresent()) {
                 throw new CommentNotFoundException();
             }
-            else {
-                String userId = String.valueOf(comment.get().getAuthor().getId());
-                commentRepository.deleteById(id);
-                userRepository.deleteById(userId);
-        }
+            commentRepository.deleteById(id);
         } else {
             throw new TokenNotValidException();
         }

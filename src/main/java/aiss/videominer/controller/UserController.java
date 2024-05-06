@@ -1,18 +1,15 @@
 package aiss.videominer.controller;
 
-import aiss.videominer.exception.BadRequestIdParameter;
-import aiss.videominer.exception.BadRequestParameterField;
-import aiss.videominer.exception.TokenNotValidException;
-import aiss.videominer.exception.TokenRequiredException;
-import aiss.videominer.exception.UserNotFoundException;
-import aiss.videominer.exception.VideoNotFoundException;
+import aiss.videominer.exception.*;
 import aiss.videominer.model.Comment;
 import aiss.videominer.model.User;
 import aiss.videominer.model.Video;
+import aiss.videominer.repository.CommentRepository;
 import aiss.videominer.repository.TokenRepository;
 import aiss.videominer.repository.UserRepository;
 import aiss.videominer.repository.VideoRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -46,6 +43,9 @@ public class UserController {
 
     @Autowired
     VideoRepository videoRepository;
+
+    @Autowired
+    CommentRepository commentRepository;
 
     // GET http://localhost:8080/videoMiner/v1/users
     @Operation( summary = "Retrieve a list of users",
@@ -171,7 +171,6 @@ public class UserController {
             tags = {"captions", "put"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
-            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
             @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
             @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
     })
@@ -187,10 +186,47 @@ public class UserController {
                 throw new UserNotFoundException();
             }
             User _user = userData.get();
-            _user.setName(updatedUser.getName());
-            _user.setUser_link(updatedUser.getUser_link());
-            _user.setPicture_link(updatedUser.getPicture_link());
+            if(updatedUser.getName()!=null){
+                _user.setName(updatedUser.getName());
+            }
+            if(updatedUser.getUser_link()!=null){
+                _user.setUser_link(updatedUser.getUser_link());
+            }
+            if(updatedUser.getPicture_link()!=null){
+                _user.setPicture_link(updatedUser.getPicture_link());
+            }
             userRepository.save(_user);
+        } else {
+            throw new TokenNotValidException();
+        }
+    }
+
+    // DELETE http://localhost:8080/videoMiner/v1/users/{id}
+    @Operation( summary = "Delete a User",
+            description = "Delete a User object by specifying its Id. Because the relation with Comment in the model is 1-1 the comment linked will be deleted too.",
+            tags = {"users", "delete"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
+            @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
+    })
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/users/{id}")
+    public void delete(@Parameter(description = "Id of the caption to be deleted") @PathVariable String id,
+                       @RequestHeader HttpHeaders header) throws TokenRequiredException, TokenNotValidException, UserNotFoundException {
+        String token = header.getFirst("Authorization");
+        if (token==null) {
+            throw new TokenRequiredException();
+        }
+        else if(tokenRepository.existsById(token)) {
+            Optional<User> userData = userRepository.findById(id);
+            if(!userData.isPresent()) {
+                throw new UserNotFoundException();
+
+            }
+            User author = userData.get();
+            Comment comment = commentRepository.findByAuthor(author);
+            commentRepository.delete(comment);
         } else {
             throw new TokenNotValidException();
         }

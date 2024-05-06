@@ -1,10 +1,6 @@
 package aiss.videominer.controller;
 
-import aiss.videominer.exception.BadRequestParameterField;
-import aiss.videominer.exception.CaptionNotFoundException;
-import aiss.videominer.exception.TokenNotValidException;
-import aiss.videominer.exception.TokenRequiredException;
-import aiss.videominer.exception.VideoNotFoundException;
+import aiss.videominer.exception.*;
 import aiss.videominer.model.Caption;
 import aiss.videominer.model.Video;
 import aiss.videominer.repository.CaptionRepository;
@@ -112,7 +108,7 @@ public class CaptionController {
     })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/captions/{id}")
-    public Caption findById(@Parameter(description = "Id of the caption to be searched") @PathVariable String id, @RequestHeader HttpHeaders header) throws CaptionNotFoundException, TokenRequiredException, TokenNotValidException {
+    public Caption findById(@Parameter(description = "Id of the caption to be searched") @PathVariable String id, @RequestHeader HttpHeaders header) throws TokenRequiredException, TokenNotValidException, CaptionNotFoundException {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
@@ -169,12 +165,15 @@ public class CaptionController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/videos/{videoId}/captions")
     public List<Caption> create(@Parameter(description = "The ID of the video to which the caption is added") @PathVariable("videoId") String videoId,
-                                @Valid @RequestBody Caption caption, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException {
+                                @Valid @RequestBody Caption caption, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException, IdCannotBeNull {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
         }
         else if(tokenRepository.existsById(token)) {
+            if(caption.getId() == null){
+                throw new IdCannotBeNull();
+            }
             Optional<Video> video = videoRepository.findById(videoId);
             if (!video.isPresent()) {
                 throw new VideoNotFoundException();
@@ -194,7 +193,6 @@ public class CaptionController {
             tags = {"captions", "put"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
-            @ApiResponse(responseCode = "400", content = {@Content(schema=@Schema())}),
             @ApiResponse(responseCode = "403", content = {@Content(schema=@Schema())}),
             @ApiResponse(responseCode = "404", content = {@Content(schema=@Schema())})
     })
@@ -213,8 +211,12 @@ public class CaptionController {
                 throw new CaptionNotFoundException();
             }
             Caption _caption = captionData.get();
-            _caption.setName(updatedCaption.getName());
-            _caption.setLanguage(updatedCaption.getLanguage());
+            if(updatedCaption.getName()!=null){
+                _caption.setName(updatedCaption.getName());
+            }
+            if(updatedCaption.getLanguage()!=null) {
+                _caption.setLanguage(updatedCaption.getLanguage());
+            }
             captionRepository.save(_caption);
         } else {
             throw new TokenNotValidException();

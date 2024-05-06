@@ -1,5 +1,6 @@
 package aiss.videominer.controller;
 
+import aiss.videominer.exception.IdCannotBeNull;
 import aiss.videominer.model.Channel;
 import aiss.videominer.model.Token;
 import aiss.videominer.repository.TokenRepository;
@@ -32,10 +33,12 @@ public class TokenController {
     })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/token")
-    public Token addToken(@Valid @RequestBody Token tokens) {
+    public Token addToken(@Valid @RequestBody Token token) throws IdCannotBeNull {
+        if(token.getId() == null){
+            throw new IdCannotBeNull();
+        }
+        repository.save(token);
 
-        repository.save(tokens);
-
-        return tokens;
+        return token;
     }
 }

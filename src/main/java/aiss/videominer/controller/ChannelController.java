@@ -1,10 +1,7 @@
 package aiss.videominer.controller;
 
 
-import aiss.videominer.exception.BadRequestParameterField;
-import aiss.videominer.exception.ChannelNotFoundException;
-import aiss.videominer.exception.TokenNotValidException;
-import aiss.videominer.exception.TokenRequiredException;
+import aiss.videominer.exception.*;
 import aiss.videominer.model.Comment;
 import aiss.videominer.model.Channel;
 import aiss.videominer.model.Video;
@@ -156,12 +153,15 @@ public class ChannelController {
     })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/channels")
-    public Channel create(@Valid @RequestBody Channel channel, @RequestHeader HttpHeaders header) throws TokenNotValidException, TokenRequiredException {
+    public Channel create(@Valid @RequestBody Channel channel, @RequestHeader HttpHeaders header) throws TokenNotValidException, TokenRequiredException, IdCannotBeNull {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
         }
         else if(tokenRepository.existsById(token)) {
+            if(channel.getId() == null){
+                throw new IdCannotBeNull();
+            }
             Channel _channel = channelRepository.save(channel);
             for (Video v : channel.getVideos()) {
                 Video video = videoRepository.save(v);
@@ -181,7 +181,7 @@ public class ChannelController {
 
     // PUT http://localhost:8080/videoMiner/v1/channels/{id}
     @Operation( summary = "Update a Channel",
-            description = "Update a Channel object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id or the createdTime fields can be modified.",
+            description = "Update a Channel object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id, the createdTime or the videos list can be modified.",
             tags = {"channels", "put"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
@@ -203,7 +203,9 @@ public class ChannelController {
             }
             Channel _channel = channelData.get();
             _channel.setName(updatedChannel.getName());
-            _channel.setDescription(updatedChannel.getDescription());
+            if (updatedChannel.getDescription() != null) {
+                _channel.setName(updatedChannel.getDescription());
+            }
             channelRepository.save(_channel);
         } else {
             throw new TokenNotValidException();
