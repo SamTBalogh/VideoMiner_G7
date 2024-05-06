@@ -16,13 +16,13 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name="Token", description="Token management API")
 @RestController
-@RequestMapping("/videominer/v1")
+@RequestMapping("/videoMiner/v1")
 public class TokenController {
 
     @Autowired
     TokenRepository repository;
 
-    // POST http://localhost:8080/videominer/api/v1/tokens
+    // POST http://localhost:8080/videoMiner/api/v1/tokens
     @Operation( summary = "Insert a Token ",
             description = "Add a Token object, the Token data is passed in the body of the request in JSON format",
             tags = {"tokens", "post"})

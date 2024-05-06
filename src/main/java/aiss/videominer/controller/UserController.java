@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 @Tag(name="User", description="User management API")
 @RestController
-@RequestMapping("/videominer/v1")
+@RequestMapping("/videoMiner/v1")
 public class UserController {
 
     @Autowired
@@ -47,7 +47,7 @@ public class UserController {
     @Autowired
     VideoRepository videoRepository;
 
-    // GET http://localhost:8080/videominer/v1/users
+    // GET http://localhost:8080/videoMiner/v1/users
     @Operation( summary = "Retrieve a list of users",
             description = "Get a list of users with different options in paging, ordering and filtering. Only one of the filter parameters (id, name, userLink, pictureLink) may be present at the same time",
             tags = {"users", "get"})
@@ -112,7 +112,7 @@ public class UserController {
         }
     }
 
-    // GET http://localhost:8080/videominer/v1/users/{id}
+    // GET http://localhost:8080/videoMiner/v1/users/{id}
     @Operation( summary = "Retrieve a User by Id",
             description = "Get a User object by specifying its id",
             tags = {"users", "get"})
@@ -138,7 +138,7 @@ public class UserController {
         }
     }
 
-    //GET http://localhost:8080/videominer/v1/videos/{videoId}/users
+    //GET http://localhost:8080/videoMiner/v1/videos/{videoId}/users
     @Operation( summary = "Retrieve the list of users of a Video",
             description = "Get a list of users associated with the video Id",
             tags = {"users", "get"})
@@ -165,7 +165,7 @@ public class UserController {
         }
     }
 
-    // PUT http://localhost:8080/videominer/v1/users/{id}
+    // PUT http://localhost:8080/videoMiner/v1/users/{id}
     @Operation( summary = "Update a User",
             description = "Update a User object by specifying its Id and whose data is passed in the body of the request in JSON format. The id field cannot be modified.",
             tags = {"captions", "put"})

@@ -36,7 +36,7 @@ import java.util.Optional;
 
 @Tag(name="Channel", description="Channel management API")
 @RestController
-@RequestMapping("/videominer/v1")
+@RequestMapping("/videoMiner/v1")
 public class ChannelController {
 
     @Autowired
@@ -57,7 +57,7 @@ public class ChannelController {
     @Autowired
     TokenRepository tokenRepository;
 
-    // GET http://localhost:8080/videominer/v1/channels
+    // GET http://localhost:8080/videoMiner/v1/channels
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/channels")
     @Operation( summary = "Retrieve a list of channels",
@@ -118,7 +118,7 @@ public class ChannelController {
         }
     }
 
-    // GET http://localhost:8080/videominer/v1/channels/{id}
+    // GET http://localhost:8080/videoMiner/v1/channels/{id}
     @Operation( summary = "Retrieve a Channel by Id",
             description = "Get a Channel object by specifying its id",
             tags = {"channels", "get"})
@@ -145,7 +145,7 @@ public class ChannelController {
         }
     }
 
-    // POST http://localhost:8080/videominer/v1/channels
+    // POST http://localhost:8080/videoMiner/v1/channels
     @Operation( summary = "Insert a Channel ",
             description = "Add a Channel object, the Channel data is passed in the body of the request in JSON format",
             tags = {"channels", "post"})
@@ -179,7 +179,7 @@ public class ChannelController {
         }
     }
 
-    // PUT http://localhost:8080/videominer/v1/channels/{id}
+    // PUT http://localhost:8080/videoMiner/v1/channels/{id}
     @Operation( summary = "Update a Channel",
             description = "Update a Channel object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id or the createdTime fields can be modified.",
             tags = {"channels", "put"})
@@ -210,7 +210,7 @@ public class ChannelController {
         }
     }
 
-    // DELETE http://localhost:8080/videominer/v1/channels/{id}
+    // DELETE http://localhost:8080/videoMiner/v1/channels/{id}
     @Operation( summary = "Delete a Channel",
             description = "Delete a Channel object by specifying its Id",
             tags = {"channels", "delete"})

@@ -33,7 +33,7 @@ import java.util.Optional;
 
 @Tag(name="Caption", description="Caption management API")
 @RestController
-@RequestMapping("/videominer/v1")
+@RequestMapping("/videoMiner/v1")
 public class CaptionController {
 
     @Autowired
@@ -45,7 +45,7 @@ public class CaptionController {
     @Autowired
     TokenRepository tokenRepository;
 
-    // GET http://localhost:8080/videominer/v1/captions
+    // GET http://localhost:8080/videoMiner/v1/captions
     @Operation( summary = "Retrieve a list of captions",
                 description = "Get a list of captions with different options in paging, ordering and filtering. Only one of the filter parameters (id, name, language) may be present at the same time",
                 tags = {"captions", "get"})
@@ -101,7 +101,7 @@ public class CaptionController {
         }
     }
 
-    // GET http://localhost:8080/videominer/v1/captions/{id}
+    // GET http://localhost:8080/videoMiner/v1/captions/{id}
     @Operation( summary = "Retrieve a Caption by Id",
             description = "Get a Caption object by specifying its id",
             tags = {"captions", "get"})
@@ -128,7 +128,7 @@ public class CaptionController {
         }
     }
 
-    // GET http://localhost:8080/videominer/v1/videos/{videoId}/captions
+    // GET http://localhost:8080/videoMiner/v1/videos/{videoId}/captions
     @Operation( summary = "Retrieve the list of captions of a Video",
             description = "Get a list of captions associated with the video Id",
             tags = {"captions", "get"})
@@ -156,7 +156,7 @@ public class CaptionController {
         }
     }
 
-    // POST http://localhost:8080/videominer/v1/videos/{videoId}/captions
+    // POST http://localhost:8080/videoMiner/v1/videos/{videoId}/captions
     @Operation( summary = "Insert a Caption into the list of captions of a Video",
             description = "Add a Caption object into the list of captions associated with the video Id, the Caption data is passed in the body of the request in JSON format",
             tags = {"captions", "post"})
@@ -188,7 +188,7 @@ public class CaptionController {
         }
     }
 
-    // PUT http://localhost:8080/videominer/v1/captions/{id}
+    // PUT http://localhost:8080/videoMiner/v1/captions/{id}
     @Operation( summary = "Update a Caption",
             description = "Update a Caption object by specifying its Id and whose data is passed in the body of the request in JSON format. The id field cannot be modified.",
             tags = {"captions", "put"})
@@ -221,7 +221,7 @@ public class CaptionController {
         }
     }
 
-    // DELETE http://localhost:8080/videominer/v1/captions/{id}
+    // DELETE http://localhost:8080/videoMiner/v1/captions/{id}
     @Operation( summary = "Delete a Caption",
             description = "Delete a Caption object by specifying its Id",
             tags = {"captions", "delete"})

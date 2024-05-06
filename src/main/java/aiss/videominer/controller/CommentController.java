@@ -35,7 +35,7 @@ import java.util.Optional;
 
 @Tag(name="Comment", description="Comment management API")
 @RestController
-@RequestMapping("/videominer/v1")
+@RequestMapping("/videoMiner/v1")
 public class CommentController {
 
     @Autowired
@@ -50,7 +50,7 @@ public class CommentController {
     @Autowired
     TokenRepository tokenRepository;
 
-    // GET http://localhost:8080/videominer/v1/comments
+    // GET http://localhost:8080/videoMiner/v1/comments
     @Operation( summary = "Retrieve a list of comments",
             description = "Get a list of comments with different options in paging, ordering and filtering. Only one of the filter parameters (id, text, createdOn) may be present at the same time",
             tags = {"comments", "get"})
@@ -106,7 +106,7 @@ public class CommentController {
         }
     }
 
-    // GET http://localhost:8080/videominer/v1/comments/{id}
+    // GET http://localhost:8080/videoMiner/v1/comments/{id}
     @Operation( summary = "Retrieve a Comment by Id",
             description = "Get a Comment object by specifying its id",
             tags = {"comments", "get"})
@@ -133,7 +133,7 @@ public class CommentController {
         }
     }
 
-    // GET http://localhost:8080/videominer/v1/videos/{videoId}/comments
+    // GET http://localhost:8080/videoMiner/v1/videos/{videoId}/comments
     @Operation( summary = "Retrieve the list of comments of a Video",
             description = "Get a list of comments associated with the video Id",
             tags = {"comments", "get"})
@@ -160,7 +160,7 @@ public class CommentController {
         }
     }
 
-    // POST http://localhost:8080/videominer/v1/videos/{videoId}/comments
+    // POST http://localhost:8080/videoMiner/v1/videos/{videoId}/comments
     @Operation( summary = "Insert a Comment into the list of comments of a Video",
             description = "Add a Comment object into the list of comments associated with the video Id, the Comment data is passed in the body of the request in JSON format",
             tags = {"comments", "post"})
@@ -193,7 +193,7 @@ public class CommentController {
         }
     }
 
-    // PUT http://localhost:8080/videominer/v1/comments/{id}
+    // PUT http://localhost:8080/videoMiner/v1/comments/{id}
     @Operation( summary = "Update a Comment",
             description = "Update a Comment object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id or the author can be modified.",
             tags = {"comments", "put"})
@@ -224,7 +224,7 @@ public class CommentController {
         }
     }
 
-    // DELETE http://localhost:8080/videominerd/v1/comments/{id}
+    // DELETE http://localhost:8080/videoMiner/v1/comments/{id}
     @Operation( summary = "Delete a Comment",
             description = "Delete a Comment object by specifying its Id",
             tags = {"comments", "delete"})

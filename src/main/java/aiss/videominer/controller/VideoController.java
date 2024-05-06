@@ -33,7 +33,7 @@ import java.util.Optional;
 
 @Tag(name="Video", description="Video management API")
 @RestController
-@RequestMapping("/videominer/v1")
+@RequestMapping("/videoMiner/v1")
 public class VideoController {
 
     @Autowired
@@ -54,7 +54,7 @@ public class VideoController {
     @Autowired
     TokenRepository tokenRepository;
 
-    // GET http://localhost:8080/videominer/v1/videos
+    // GET http://localhost:8080/videoMiner/v1/videos
     @Operation( summary = "Retrieve a list of videos",
             description = "Get a list of videos with different options in paging, ordering and filtering. Only one of the filter parameters (id, name, description, order) may be present at the same time",
             tags = {"videos", "get"})
@@ -114,7 +114,7 @@ public class VideoController {
         }
 }
 
-    // GET http://localhost:8080/videominer/v1/videos/{id}
+    // GET http://localhost:8080/videoMiner/v1/videos/{id}
     @Operation( summary = "Retrieve a Video by Id",
             description = "Get a Video object by specifying its id",
             tags = {"videos", "get"})
@@ -141,7 +141,7 @@ public class VideoController {
         }
     }
 
-    // GET http://localhost:8080/videominer/v1/channels/{channelId}/videos
+    // GET http://localhost:8080/videoMiner/v1/channels/{channelId}/videos
     @Operation( summary = "Retrieve the list of videos of a Channel",
             description = "Get a list of videos associated with the channel Id",
             tags = {"videos", "get"})
@@ -168,7 +168,7 @@ public class VideoController {
         }
     }
 
-    // POST http://localhost:8080/videominer/v1/channels/{channelId}/videos
+    // POST http://localhost:8080/videoMiner/v1/channels/{channelId}/videos
     @Operation( summary = "Insert a Video into the list of videos of a Channel",
             description = "Add a Video object into the list of videos associated with the channel Id, the Video data is passed in the body of the request in JSON format",
             tags = {"videos", "post"})
@@ -204,7 +204,7 @@ public class VideoController {
         }
     }
 
-    // PUT http://localhost:8080/videominer/v1/videos/{id}
+    // PUT http://localhost:8080/videoMiner/v1/videos/{id}
     @Operation( summary = "Update a Video",
             description = "Update a Video object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id, the comments list or the captions list can be modified.",
             tags = {"videos", "put"})
@@ -236,7 +236,7 @@ public class VideoController {
         }
     }
 
-    // DELETE http://localhost:8080/videominer/v1/videos/{id}
+    // DELETE http://localhost:8080/videoMiner/v1/videos/{id}
     @Operation( summary = "Delete a Video",
             description = "Delete a Video object by specifying its Id",
             tags = {"videos", "delete"})
