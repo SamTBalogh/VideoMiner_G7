@@ -2,7 +2,6 @@ package aiss.videominer.controller;
 
 import aiss.videominer.exception.*;
 import aiss.videominer.model.Comment;
-import aiss.videominer.model.User;
 import aiss.videominer.model.Video;
 import aiss.videominer.repository.CommentRepository;
 import aiss.videominer.repository.TokenRepository;
@@ -182,8 +181,6 @@ public class CommentController {
                 throw new VideoNotFoundException();
             }
             video.get().getComments().add(commentRequest);
-            User user = commentRequest.getAuthor();
-            userRepository.save(user);
             Comment comment = commentRepository.save(commentRequest);
             videoRepository.save(video.get());
             return comment;

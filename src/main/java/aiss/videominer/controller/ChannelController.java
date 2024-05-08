@@ -2,9 +2,7 @@ package aiss.videominer.controller;
 
 
 import aiss.videominer.exception.*;
-import aiss.videominer.model.Comment;
 import aiss.videominer.model.Channel;
-import aiss.videominer.model.Video;
 import aiss.videominer.repository.CaptionRepository;
 import aiss.videominer.repository.ChannelRepository;
 import aiss.videominer.repository.CommentRepository;
@@ -162,18 +160,7 @@ public class ChannelController {
             if(channel.getId() == null){
                 throw new IdCannotBeNull();
             }
-            Channel _channel = channelRepository.save(channel);
-            for (Video v : channel.getVideos()) {
-                Video video = videoRepository.save(v);
-                _channel.getVideos().add(video);
-                captionRepository.saveAll(v.getCaptions());
-                for (Comment com : v.getComments()) {
-                    Comment comment = commentRepository.save(com);
-                    video.getComments().add(comment);
-                    userRepository.save(comment.getAuthor());
-                }
-            }
-            return _channel;
+            return channelRepository.save(channel);
         } else {
             throw new TokenNotValidException();
         }

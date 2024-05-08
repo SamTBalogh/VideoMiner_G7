@@ -2,7 +2,6 @@ package aiss.videominer.controller;
 
 import aiss.videominer.exception.*;
 import aiss.videominer.model.Channel;
-import aiss.videominer.model.Comment;
 import aiss.videominer.model.Video;
 import aiss.videominer.repository.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -190,11 +189,6 @@ public class VideoController {
                 throw new ChannelNotFoundException();
             }
             channel.get().getVideos().add(videoRequest);
-            for (Comment comment : videoRequest.getComments()) {
-                userRepository.save(comment.getAuthor());
-                commentRepository.save(comment);
-            }
-            captionRepository.saveAll(videoRequest.getCaptions());
             Video video = videoRepository.save(videoRequest);
             channelRepository.save(channel.get());
             return video;
