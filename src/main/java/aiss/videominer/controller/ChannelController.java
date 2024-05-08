@@ -160,8 +160,8 @@ public class ChannelController {
             if(channel.getId() == null){
                 throw new IdCannotBeNull();
             }
-            Channel _channel = channelRepository.save(channel);
-            return _channel;
+
+            return channelRepository.save(channel);
         } else {
             throw new TokenNotValidException();
         }

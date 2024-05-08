@@ -1,5 +1,6 @@
 package aiss.videominer.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
@@ -13,6 +14,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "Channel")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Channel {
 
     @Id
