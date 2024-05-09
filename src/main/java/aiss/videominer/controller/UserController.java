@@ -49,7 +49,11 @@ public class UserController {
 
     // GET http://localhost:8080/videoMiner/v1/users
     @Operation( summary = "Retrieve a list of users",
-            description = "Get a list of users with different options in paging, ordering and filtering. Only one of the filter parameters (id, name, userLink, pictureLink) may be present at the same time",
+            description = "Get a list of users with different options in paging, ordering and filtering. Only one of the filter parameters (`id`, `name`, `userLink`, `pictureLink`) may be present at the same time.<br /><br />" +
+                    "Each filter parameter corresponds to one of the attributes of the User class. For example, `id` filters users by their unique identifier, `userLink` filters users by their user link and `pictureLink` filters users by their picture link.<br /><br />" +
+                    "The parameter `page` indicates the page number of results to retrieve, while the `size` parameter specifies the number of results per page.<br />" +
+                    "Pages are zero-indexed, so `page=0` returns the first page of results. If there is no result found the response will return empty.<br /><br />"+
+                    "The `order` parameter specifies the ordering of the results. It accepts the name of the attribute by which you want to order the results. If descending order is desired, prefix the attribute with '-'. For example, 'name' for ascending order and '-name' for descending order.",
             tags = {"users", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema=@Schema(implementation = User.class)), mediaType = "application/json")}),
@@ -114,7 +118,7 @@ public class UserController {
 
     // GET http://localhost:8080/videoMiner/v1/users/{id}
     @Operation( summary = "Retrieve a User by Id",
-            description = "Get a User object by specifying its id",
+            description = "Get a User object by specifying its Id.",
             tags = {"users", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = User.class), mediaType = "application/json")}),
@@ -140,7 +144,7 @@ public class UserController {
 
     //GET http://localhost:8080/videoMiner/v1/videos/{videoId}/users
     @Operation( summary = "Retrieve the list of users of a Video",
-            description = "Get a list of users associated with the video Id",
+            description = "Get a list of users associated with the video Id.",
             tags = {"users", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema=@Schema(implementation = User.class)), mediaType = "application/json")}),
@@ -167,7 +171,7 @@ public class UserController {
 
     // PUT http://localhost:8080/videoMiner/v1/users/{id}
     @Operation( summary = "Update a User",
-            description = "Update a User object by specifying its Id and whose data is passed in the body of the request in JSON format. The id field cannot be modified.",
+            description = "Update a User object by specifying its Id.<br >The id field cannot be modified.<br >The User data is passed in the body of the request in JSON format.",
             tags = {"captions", "put"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
@@ -203,7 +207,7 @@ public class UserController {
 
     // DELETE http://localhost:8080/videoMiner/v1/users/{id}
     @Operation( summary = "Delete a User",
-            description = "Delete a User object by specifying its Id. Because the relation with Comment in the model is 1-1 the comment linked will be deleted too.",
+            description = "Delete a User object by specifying its Id.<br >Because of the relation with Comment in the model, the comment linked will be deleted too.",
             tags = {"users", "delete"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
@@ -212,7 +216,7 @@ public class UserController {
     })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/users/{id}")
-    public void delete(@Parameter(description = "Id of the caption to be deleted") @PathVariable String id,
+    public void delete(@Parameter(description = "Id of the user to be deleted") @PathVariable String id,
                        @RequestHeader HttpHeaders header) throws TokenRequiredException, TokenNotValidException, UserNotFoundException {
         String token = header.getFirst("Authorization");
         if (token==null) {
@@ -222,10 +226,10 @@ public class UserController {
             Optional<User> userData = userRepository.findById(id);
             if(!userData.isPresent()) {
                 throw new UserNotFoundException();
-
             }
             User author = userData.get();
             Comment comment = commentRepository.findByAuthor(author);
+            System.out.println(comment);
             commentRepository.delete(comment);
         } else {
             throw new TokenNotValidException();

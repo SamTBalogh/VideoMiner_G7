@@ -47,7 +47,11 @@ public class CommentController {
 
     // GET http://localhost:8080/videoMiner/v1/comments
     @Operation( summary = "Retrieve a list of comments",
-            description = "Get a list of comments with different options in paging, ordering and filtering. Only one of the filter parameters (id, text, createdOn) may be present at the same time",
+            description = "Get a list of comments with different options in paging, ordering and filtering. Only one of the filter parameters (`id`, `text`, `createdOn`) may be present at the same time.<br /><br />" +
+                    "Each filter parameter corresponds to one of the attributes of the Comment class. For example, `id` filters comments by their unique identifier, `text` filters comments by their text and `createdOn` filters comments by the time they were created.<br /><br />" +
+                    "The parameter `page` indicates the page number of results to retrieve, while the `size` parameter specifies the number of results per page.<br />" +
+                    "Pages are zero-indexed, so `page=0` returns the first page of results. If there is no result found the response will return empty.<br /><br />"+
+                    "The `order` parameter specifies the ordering of the results. It accepts the name of the attribute by which you want to order the results. If descending order is desired, prefix the attribute with '-'. For example, 'id' for ascending order and '-id' for descending order.",
             tags = {"comments", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema=@Schema(implementation = Comment.class)), mediaType = "application/json")}),
@@ -103,7 +107,7 @@ public class CommentController {
 
     // GET http://localhost:8080/videoMiner/v1/comments/{id}
     @Operation( summary = "Retrieve a Comment by Id",
-            description = "Get a Comment object by specifying its id",
+            description = "Get a Comment object by specifying its Id.",
             tags = {"comments", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = Comment.class), mediaType = "application/json")}),
@@ -130,7 +134,7 @@ public class CommentController {
 
     // GET http://localhost:8080/videoMiner/v1/videos/{videoId}/comments
     @Operation( summary = "Retrieve the list of comments of a Video",
-            description = "Get a list of comments associated with the video Id",
+            description = "Get a list of comments associated with the video Id.",
             tags = {"comments", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema=@Schema(implementation = Comment.class)), mediaType = "application/json")}),
@@ -157,7 +161,7 @@ public class CommentController {
 
     // POST http://localhost:8080/videoMiner/v1/videos/{videoId}/comments
     @Operation( summary = "Insert a Comment into the list of comments of a Video",
-            description = "Add a Comment object into the list of comments associated with the video Id, the Comment data is passed in the body of the request in JSON format",
+            description = "Add a Comment object into the list of comments associated with the video Id.<br >The Comment data is passed in the body of the request in JSON format.",
             tags = {"comments", "post"})
     @ApiResponses({
             @ApiResponse(responseCode = "201", content = {@Content(schema=@Schema(implementation = Comment.class), mediaType = "application/json")}),
@@ -167,7 +171,7 @@ public class CommentController {
     })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/videos/{videoId}/comments")
-    public Comment create(@PathVariable("videoId") String videoId, @Valid @RequestBody Comment commentRequest, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException, IdCannotBeNull {
+    public List<Comment> create(@PathVariable("videoId") String videoId, @Valid @RequestBody Comment commentRequest, @RequestHeader HttpHeaders header) throws VideoNotFoundException, TokenRequiredException, TokenNotValidException, IdCannotBeNull {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
@@ -181,9 +185,8 @@ public class CommentController {
                 throw new VideoNotFoundException();
             }
             video.get().getComments().add(commentRequest);
-            Comment comment = commentRepository.save(commentRequest);
             videoRepository.save(video.get());
-            return comment;
+            return video.get().getComments();
         } else {
             throw new TokenNotValidException();
         }
@@ -191,7 +194,7 @@ public class CommentController {
 
     // PUT http://localhost:8080/videoMiner/v1/comments/{id}
     @Operation( summary = "Update a Comment",
-            description = "Update a Comment object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id or the author can be modified.",
+            description = "Update a Comment object by specifying its Id.<br >Nor the id or the author can be modified.<br >The Comment data is passed in the body of the request in JSON format.",
             tags = {"comments", "put"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
@@ -216,7 +219,7 @@ public class CommentController {
                 _comment.setText(updatedComment.getText());
             }
             if(updatedComment.getCreatedOn()!=null){
-                _comment.setText(updatedComment.getCreatedOn());
+                _comment.setCreatedOn(updatedComment.getCreatedOn());
             }
             commentRepository.save(_comment);
         } else {
@@ -226,7 +229,7 @@ public class CommentController {
 
     // DELETE http://localhost:8080/videoMiner/v1/comments/{id}
     @Operation( summary = "Delete a Comment",
-            description = "Delete a Comment object by specifying its Id. Because the relation with User in the model is 1-1 the user linked will be deleted too.",
+            description = "Delete a Comment object by specifying its Id.<br >Because of the relation with User in the model, the user linked will be deleted too.",
             tags = {"comments", "delete"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
