@@ -194,7 +194,7 @@ public class VideoController {
             }
             channel.get().getVideos().add(videoRequest);
             channelRepository.save(channel.get());
-            return videoRequest;
+            return channel.get().getVideos();
         } else {
             throw new TokenNotValidException();
         }
