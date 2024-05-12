@@ -180,7 +180,6 @@ public class CaptionController {
             }
             video.get().getCaptions().add(caption);
             videoRepository.save(video.get());
-            captionRepository.save(new Caption(caption.getId(), caption.getLanguage(), caption.getName()));
             return video.get().getCaptions();
         } else {
             throw new TokenNotValidException();

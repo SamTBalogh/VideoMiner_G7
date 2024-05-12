@@ -181,9 +181,8 @@ public class CommentController {
                 throw new VideoNotFoundException();
             }
             video.get().getComments().add(commentRequest);
-            Comment comment = commentRepository.save(commentRequest);
             videoRepository.save(video.get());
-            return comment;
+            return commentRequest;
         } else {
             throw new TokenNotValidException();
         }
