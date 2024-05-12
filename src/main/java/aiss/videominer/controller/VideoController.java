@@ -51,7 +51,11 @@ public class VideoController {
 
     // GET http://localhost:8080/videoMiner/v1/videos
     @Operation( summary = "Retrieve a list of videos",
-            description = "Get a list of videos with different options in paging, ordering and filtering. Only one of the filter parameters (id, name, description, order) may be present at the same time",
+            description = "Get a list of videos with different options in paging, ordering and filtering. Only one of the filter parameters (`id`, `name`, `description`, `order`) may be present at the same time.<br /><br />" +
+                    "Each filter parameter corresponds to one of the attributes of the Video class. For example, `id` filters videos by their unique identifier, `name` filters videos by their name, `description` filters videos by their description, and `releaseTime` filters videos by the time they were released.<br /><br />" +
+                    "The parameter `page` indicates the page number of results to retrieve, while the `size` parameter specifies the number of results per page.<br />" +
+                    "Pages are zero-indexed, so `page=0` returns the first page of results. If there is no result found the response will return empty.<br /><br />"+
+                    "The `order` parameter specifies the ordering of the results. It accepts the name of the attribute by which you want to order the results. If descending order is desired, prefix the attribute with '-'. For example, 'name' for ascending order and '-name' for descending order.",
             tags = {"videos", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema=@Schema(implementation = Video.class)), mediaType = "application/json")}),
@@ -111,7 +115,7 @@ public class VideoController {
 
     // GET http://localhost:8080/videoMiner/v1/videos/{id}
     @Operation( summary = "Retrieve a Video by Id",
-            description = "Get a Video object by specifying its id",
+            description = "Get a Video object by specifying its Id.",
             tags = {"videos", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = Video.class), mediaType = "application/json")}),
@@ -138,7 +142,7 @@ public class VideoController {
 
     // GET http://localhost:8080/videoMiner/v1/channels/{channelId}/videos
     @Operation( summary = "Retrieve the list of videos of a Channel",
-            description = "Get a list of videos associated with the channel Id",
+            description = "Get a list of videos associated with the channel Id.",
             tags = {"videos", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema=@Schema(implementation = Video.class)), mediaType = "application/json")}),
@@ -165,7 +169,7 @@ public class VideoController {
 
     // POST http://localhost:8080/videoMiner/v1/channels/{channelId}/videos
     @Operation( summary = "Insert a Video into the list of videos of a Channel",
-            description = "Add a Video object into the list of videos associated with the channel Id, the Video data is passed in the body of the request in JSON format",
+            description = "Add a Video object into the list of videos associated with the channel Id.<br >The Video data is passed in the body of the request in JSON format.",
             tags = {"videos", "post"})
     @ApiResponses({
             @ApiResponse(responseCode = "201", content = {@Content(schema=@Schema(implementation = Video.class), mediaType = "application/json")}),
@@ -175,7 +179,7 @@ public class VideoController {
     })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/channels/{channelId}/videos")
-    public Video create(@PathVariable("channelId") String channelId, @Valid @RequestBody Video videoRequest, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException, IdCannotBeNull {
+    public List<Video> create(@PathVariable("channelId") String channelId, @Valid @RequestBody Video videoRequest, @RequestHeader HttpHeaders header) throws ChannelNotFoundException, TokenRequiredException, TokenNotValidException, IdCannotBeNull {
         String token = header.getFirst("Authorization");
         if (token==null) {
             throw new TokenRequiredException();
@@ -198,7 +202,7 @@ public class VideoController {
 
     // PUT http://localhost:8080/videoMiner/v1/videos/{id}
     @Operation( summary = "Update a Video",
-            description = "Update a Video object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id, the releaseTime, the comments list or the captions list can be modified.",
+            description = "Update a Video object by specifying its Id.<br >Nor the id, the releaseTime, the comments list or the captions list can be modified.<br >The Video data is passed in the body of the request in JSON format.",
             tags = {"videos", "put"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
@@ -219,7 +223,9 @@ public class VideoController {
                 throw new VideoNotFoundException();
             }
             Video _video = videoData.get();
-            _video.setName(updatedVideo.getName());
+            if(updatedVideo.getName() != null){
+                _video.setName(updatedVideo.getName());
+            }
             if(updatedVideo.getDescription() != null){
                 _video.setDescription(updatedVideo.getDescription());
             }
@@ -231,7 +237,7 @@ public class VideoController {
 
     // DELETE http://localhost:8080/videoMiner/v1/videos/{id}
     @Operation( summary = "Delete a Video",
-            description = "Delete a Video object by specifying its Id",
+            description = "Delete a Video object by specifying its Id.<br >Because of the relation with Comment, User and Caption in the model, all the comments, users and captions linked will be deleted too.",
             tags = {"videos", "delete"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),

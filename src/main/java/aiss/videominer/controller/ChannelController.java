@@ -56,7 +56,11 @@ public class ChannelController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/channels")
     @Operation( summary = "Retrieve a list of channels",
-            description = "Get a list of channels with different options in paging, ordering and filtering. Only one of the filter parameters (id, name, description, createdTime) may be present at the same time",
+            description = "Get a list of channels with different options in paging, ordering and filtering. Only one of the filter parameters (`id`, `name`, `description`, `createdTime`) may be present at the same time.<br /><br />" +
+                    "Each filter parameter corresponds to one of the attributes of the Channel class. For example, `id` filters channels by their unique identifier, `name` filters channels by their name, `description` filters channels by their description, and `createdTime` filters channels by the time they were created.<br /><br />" +
+                    "The parameter `page` indicates the page number of results to retrieve, while the `size` parameter specifies the number of results per page.<br />" +
+                    "Pages are zero-indexed, so `page=0` returns the first page of results. If there is no result found the response will return empty.<br /><br />"+
+                    "The `order` parameter specifies the ordering of the results. It accepts the name of the attribute by which you want to order the results. If descending order is desired, prefix the attribute with '-'. For example, 'name' for ascending order and '-name' for descending order.",
             tags = {"channels", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema=@Schema(implementation = Channel.class)), mediaType = "application/json")}),
@@ -115,7 +119,7 @@ public class ChannelController {
 
     // GET http://localhost:8080/videoMiner/v1/channels/{id}
     @Operation( summary = "Retrieve a Channel by Id",
-            description = "Get a Channel object by specifying its id",
+            description = "Get a Channel object by specifying its Id.",
             tags = {"channels", "get"})
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {@Content(schema=@Schema(implementation = Channel.class), mediaType = "application/json")}),
@@ -141,8 +145,8 @@ public class ChannelController {
     }
 
     // POST http://localhost:8080/videoMiner/v1/channels
-    @Operation( summary = "Insert a Channel ",
-            description = "Add a Channel object, the Channel data is passed in the body of the request in JSON format",
+    @Operation( summary = "Insert a Channel",
+            description = "Add a Channel object, the Channel data is passed in the body of the request in JSON format.",
             tags = {"channels", "post"})
     @ApiResponses({
             @ApiResponse(responseCode = "201", content = {@Content(schema=@Schema(implementation = Channel.class), mediaType = "application/json")}),
@@ -169,7 +173,7 @@ public class ChannelController {
 
     // PUT http://localhost:8080/videoMiner/v1/channels/{id}
     @Operation( summary = "Update a Channel",
-            description = "Update a Channel object by specifying its Id and whose data is passed in the body of the request in JSON format. Nor the id, the createdTime or the videos list can be modified.",
+            description = "Update a Channel object by specifying its Id.<br >Nor the id, the createdTime or the videos list can be modified.<br >The Channel data is passed in the body of the request in JSON format.",
             tags = {"channels", "put"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),
@@ -190,9 +194,11 @@ public class ChannelController {
                 throw new ChannelNotFoundException();
             }
             Channel _channel = channelData.get();
-            _channel.setName(updatedChannel.getName());
+            if (updatedChannel.getName() != null) {
+                _channel.setName(updatedChannel.getName());
+            }
             if (updatedChannel.getDescription() != null) {
-                _channel.setName(updatedChannel.getDescription());
+                _channel.setDescription(updatedChannel.getDescription());
             }
             channelRepository.save(_channel);
         } else {
@@ -202,7 +208,7 @@ public class ChannelController {
 
     // DELETE http://localhost:8080/videoMiner/v1/channels/{id}
     @Operation( summary = "Delete a Channel",
-            description = "Delete a Channel object by specifying its Id",
+            description = "Delete a Channel object by specifying its Id.<br >Because of the relation with Video, Comment, User and Caption in the model, all the videos, comments, users and captions linked will be deleted too.",
             tags = {"channels", "delete"})
     @ApiResponses({
             @ApiResponse(responseCode = "204", content = {@Content(schema=@Schema())}),

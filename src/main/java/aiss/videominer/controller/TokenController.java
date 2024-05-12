@@ -24,8 +24,8 @@ public class TokenController {
     TokenRepository repository;
 
     // POST http://localhost:8080/videoMiner/api/v1/tokens
-    @Operation( summary = "Insert a Token ",
-            description = "Add a Token object, the Token data is passed in the body of the request in JSON format",
+    @Operation( summary = "Insert a Token",
+            description = "Add a Token object, the Token data is passed in the body of the request in JSON format.",
             tags = {"tokens", "post"})
     @ApiResponses({
             @ApiResponse(responseCode = "201", content = {@Content(schema=@Schema(implementation = Channel.class), mediaType = "application/json")}),
